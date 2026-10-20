@@ -78,7 +78,7 @@ static void hlog(const char *fmt, ...)
     va_list ap; va_start(ap, fmt);
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
-    os_log_with_type(OS_LOG_DEFAULT, "%{public}s", buf);
+    os_log("%{public}s", buf);
     fprintf(stderr, "%s", buf);
 }
 
@@ -154,8 +154,7 @@ int main(int argc, char **argv)
 	posix_spawnattr_destroy(&attr);
 	if (rc != 0) {
 		hlog("[host] posix_spawn failed: %s (%d)\n", strerror(rc), rc);
-		{ char r[256]; snprintf(r, sizeof(r), "spawn_failed errno=%d
-", rc); write_result(r); }
+		{ char r[256]; snprintf(r, sizeof(r), "spawn_failed errno=%d\n", rc); write_result(r); }
 		return 1;
 	}
 	hlog("[host] spawned child pid=%d (suspended, reslide)\n", pid);
