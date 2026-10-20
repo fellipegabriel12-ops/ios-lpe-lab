@@ -101,7 +101,8 @@ static void unum(char *d, unsigned long v)
 
 static void probe_main(void);
 
-void _start(void)
+void my_start(void) __asm__("_start");
+void my_start(void)
 {
 	probe_main();
 	__builtin_unreachable();
@@ -112,6 +113,7 @@ int main(void)
 	probe_main();
 	return 0;
 }
+
 
 static void probe_main(void)
 {
