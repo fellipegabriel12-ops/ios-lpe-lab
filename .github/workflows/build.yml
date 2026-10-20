@@ -22,7 +22,7 @@ jobs:
           git checkout -B build-artifacts
           git add -f dist probe_off.h trig_off.h
           git commit -m "build: LPE.ipa + binaries" || true
-          git push origin build-artifacts
+          git push --force origin build-artifacts
       - uses: actions/upload-artifact@v4
         with:
           name: ios-lpe
