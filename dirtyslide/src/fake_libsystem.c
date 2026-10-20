@@ -28,7 +28,7 @@
         "ret\n\t" \
     );
 #define WRAP_DYLD(func) \
-    static void* dyld_##func; \
+    void* dyld_##func;   /* external: the reference lives in inline asm, so -Os would drop a static */ \
     __asm__( \
         ".global _" #func "\n\t" \
         "_" #func ":\n\t" \
