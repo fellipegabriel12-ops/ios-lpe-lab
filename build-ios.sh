@@ -31,7 +31,7 @@ echo "[*] child_probe @ 0x$PROBE_ADDR, __TEXT 0x$TEXT_VMADDR => PROBE_OFFSET=$OF
 echo "[*] child_trigger @ 0x$TRIG_ADDR => TRIGGER_OFFSET=$TRIG_OFF"
 
 echo "[*] building host..."
-$CC -I. -o "$APP/LPE" host_ios.c
+$CC -I. -o "$APP/LPE" host_probe.c
 
 cat > "$APP/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
