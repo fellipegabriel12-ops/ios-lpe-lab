@@ -26,21 +26,25 @@
 #define SYS_shared_region_check  294
 
 
-/* the toolchain's crt __start shim pulls in _bzero (and friends) from libSystem; with
-   -nostdlib we must provide them ourselves */
-void _bzero(void *dst, unsigned long n)
+/* The iOS crt __start shim references the x86-style names ("_bzero"); with -nostdlib there is
+   no libSystem to satisfy them, and a plain C definition lands under a different symbol name.
+   So we pin the exact names with asm labels. */
+__asm__("_bzero");
+void my_bzero(void *dst, unsigned long n)
 {
 	unsigned char *d = (unsigned char *)dst;
 	while (n--) *d++ = 0;
 }
-void *memset(void *d, int ch, unsigned long n)
+__asm__("memset");
+void *my_memset(void *d, int ch, unsigned long n)
 {
 	unsigned char *p = (unsigned char *)d;
 	unsigned char v = (unsigned char)ch;
 	while (n--) *p++ = v;
 	return d;
 }
-void *memcpy(void *d, const void *s, unsigned long n)
+__asm__("memcpy");
+void *my_memcpy(void *d, const void *s, unsigned long n)
 {
 	unsigned char *p = (unsigned char *)d;
 	const unsigned char *q = (const unsigned char *)s;
@@ -112,7 +116,7 @@ static void probe_main(void)
 	long argc = (long)sp[0];
 	char **envp = (char **)(sp + 1 + argc + 1);
 
-	char home[512] = {0};
+	char home[512];
 	for (char **e = envp; *e; e++) {
 		if (seq(*e, "HOME=")) { scpy(home, *e + 5); break; }
 	}
