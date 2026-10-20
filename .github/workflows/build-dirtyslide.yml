@@ -9,12 +9,13 @@ permissions:
   contents: write
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: build the iOS payload
         run: |
           set -e
+          xcodebuild -version
           cd dirtyslide
           # iOS keeps the dyld cache outside the Cryptexes/OS prefix
           sed -i '' 's#/System/Cryptexes/OS/System/Library/Caches/com.apple.dyld/#/System/Library/Caches/com.apple.dyld/#g' DirtySlide/myimpl.m DirtySlide/main.m || true
@@ -36,6 +37,7 @@ jobs:
       - name: show the built binary
         run: |
           set -e
+          xcodebuild -version
           APP=$(find "$PWD/build/Build/Products" -maxdepth 2 -name "*.app" -type d | head -1)
           file "$APP/DirtySlide" || true
           otool -L "$APP/DirtySlide" 2>/dev/null | head -20 || true
