@@ -41,6 +41,10 @@
 /* --- mach_vm API: the iOS SDK ships the vm types (<mach/vm_types.h>) but not
  *     <mach/mach_vm.h>, so declare just the two functions we need. The symbols are in
  *     libsystem_kernel on iOS. --- */
+
+#ifndef vm_task_t
+typedef mach_port_t vm_task_t;   /* iOS has no <mach/mach_vm.h>; mach_port_t is the real type */
+#endif
 extern kern_return_t mach_vm_read_overwrite(vm_task_t target_task, vm_address_t address,
                                              vm_size_t size, vm_address_t data,
                                              vm_size_t *out_size);
@@ -64,7 +68,7 @@ static vm_address_t find_exec_base(vm_task_t task)
 
 	for (;;) {
 		uint8_t buf[512];
-		msg_type_t cnt = VM_REGION_SUBMAP_INFO_COUNT_64;
+		mach_msg_type_number_t cnt = VM_REGION_SUBMAP_INFO_COUNT_64;
 		kern_return_t kr = mach_vm_region_recurse(task, &addr, &size, &depth,
 		    (void *)buf, &cnt);
 		if (kr != 0)
