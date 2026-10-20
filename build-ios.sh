@@ -16,11 +16,8 @@ CC="clang -arch $ARCH -isysroot $SDK -miphoneos-version-min=16.0 -O0 -g -Wall -f
 
 mkdir -p "$APP"
 
-# child's main() must not collide: we never run the child's main (it is hijacked pre-dyld)
-sed 's/^int main(void)/int child_main_unused(void)/' child.c > child_nomain.c
-
-echo "[*] building child..."
-$CC -o "$APP/libchild.dylib" child_nomain.c
+echo "[*] building child (standalone: it keeps its own main(), we never reach it)..."
+$CC -o "$APP/libchild.dylib" child.c
 
 # child_probe offset (relative to the child's __TEXT base) is what the host needs
 PROBE_ADDR=$(nm "$APP/libchild.dylib" | awk '/ _child_probe$/ {print $1}')
