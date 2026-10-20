@@ -57,8 +57,8 @@ codesign -s - --force "$APP/libchild.dylib" 2>/dev/null || true
 codesign -s - --force "$APP/LPE" 2>/dev/null || true
 
 cd "$DIST"
-rm -f ../LPE.ipa
-zip -q -r -X ../LPE.ipa Payload
+rm -f LPE.ipa
+zip -q -r -X LPE.ipa Payload
 cd ..
 echo "[+] built dist/LPE.ipa"
 ls -la dist/LPE.ipa dist/Payload/LPE.app/
