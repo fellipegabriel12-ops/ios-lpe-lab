@@ -29,13 +29,15 @@
 /* The iOS crt __start shim references the x86-style names ("_bzero"); with -nostdlib there is
    no libSystem to satisfy them, and a plain C definition lands under a different symbol name.
    So we pin the exact names with asm labels. */
-__asm__("_bzero");
+void my_bzero(void *dst, unsigned long n) __asm__("_bzero");
 void my_bzero(void *dst, unsigned long n)
 {
 	unsigned char *d = (unsigned char *)dst;
 	while (n--) *d++ = 0;
 }
-__asm__("memset");
+void *my_memset(void *d, int ch, unsigned long n) __asm__("memset");
+void *my_memset_us(void *d, int ch, unsigned long n) __asm__("_memset");
+void *my_memset_us(void *d, int ch, unsigned long n) { return my_memset(d, ch, n); }
 void *my_memset(void *d, int ch, unsigned long n)
 {
 	unsigned char *p = (unsigned char *)d;
@@ -43,7 +45,9 @@ void *my_memset(void *d, int ch, unsigned long n)
 	while (n--) *p++ = v;
 	return d;
 }
-__asm__("memcpy");
+void *my_memcpy(void *d, const void *s, unsigned long n) __asm__("memcpy");
+void *my_memcpy_us(void *d, const void *s, unsigned long n) __asm__("_memcpy");
+void *my_memcpy_us(void *d, const void *s, unsigned long n) { return my_memcpy(d, s, n); }
 void *my_memcpy(void *d, const void *s, unsigned long n)
 {
 	unsigned char *p = (unsigned char *)d;
