@@ -26,9 +26,9 @@
 #define SYS_shared_region_check  294
 
 
-/* The iOS crt __start shim references the x86-style names ("_bzero"); with -nostdlib there is
-   no libSystem to satisfy them, and a plain C definition lands under a different symbol name.
-   So we pin the exact names with asm labels. */
+/* The iOS crt __start shim references the x86-style names ("_bzero"); with -nostdlib there
+   is no libSystem to satisfy them, and a plain C definition lands under a different symbol
+   name, so we pin the exact names with declaration-level asm labels. */
 void my_bzero(void *dst, unsigned long n) __asm__("_bzero");
 void my_bzero(void *dst, unsigned long n)
 {
@@ -36,8 +36,6 @@ void my_bzero(void *dst, unsigned long n)
 	while (n--) *d++ = 0;
 }
 void *my_memset(void *d, int ch, unsigned long n) __asm__("memset");
-void *my_memset_us(void *d, int ch, unsigned long n) __asm__("_memset");
-void *my_memset_us(void *d, int ch, unsigned long n) { return my_memset(d, ch, n); }
 void *my_memset(void *d, int ch, unsigned long n)
 {
 	unsigned char *p = (unsigned char *)d;
@@ -45,9 +43,9 @@ void *my_memset(void *d, int ch, unsigned long n)
 	while (n--) *p++ = v;
 	return d;
 }
+void *my_memset_us(void *d, int ch, unsigned long n) __asm__("_memset");
+void *my_memset_us(void *d, int ch, unsigned long n) { return my_memset(d, ch, n); }
 void *my_memcpy(void *d, const void *s, unsigned long n) __asm__("memcpy");
-void *my_memcpy_us(void *d, const void *s, unsigned long n) __asm__("_memcpy");
-void *my_memcpy_us(void *d, const void *s, unsigned long n) { return my_memcpy(d, s, n); }
 void *my_memcpy(void *d, const void *s, unsigned long n)
 {
 	unsigned char *p = (unsigned char *)d;
@@ -55,6 +53,8 @@ void *my_memcpy(void *d, const void *s, unsigned long n)
 	while (n--) *p++ = *q++;
 	return d;
 }
+void *my_memcpy_us(void *d, const void *s, unsigned long n) __asm__("_memcpy");
+void *my_memcpy_us(void *d, const void *s, unsigned long n) { return my_memcpy(d, s, n); }
 
 static long sc6(long num, long a0, long a1, long a2, long a3, long a4, long a5, int *err)
 {
