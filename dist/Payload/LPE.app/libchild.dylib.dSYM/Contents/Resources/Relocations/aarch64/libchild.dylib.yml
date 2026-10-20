@@ -1,0 +1,9 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'dist/Payload/LPE.app/libchild.dylib'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _child_probe, symObjAddr: 0x0, symBinAddr: 0x100004000, symSize: 0x98 }
+  - { offsetInCU: 0x1B3, offset: 0x1B3, size: 0x8, addend: 0x0, symName: _child_probe, symObjAddr: 0x0, symBinAddr: 0x100004000, symSize: 0x98 }
+  - { offsetInCU: 0x257, offset: 0x257, size: 0x8, addend: 0x0, symName: _child_trigger, symObjAddr: 0x98, symBinAddr: 0x100004098, symSize: 0x1BC }
+  - { offsetInCU: 0x487, offset: 0x487, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x254, symBinAddr: 0x100004254, symSize: 0x1C }
+...
