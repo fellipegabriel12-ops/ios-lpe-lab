@@ -54,8 +54,11 @@ extern kern_return_t mach_vm_region_recurse(vm_task_t target_task, vm_address_t 
                                              mach_msg_type_number_t *count);
 
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <errno.h>
 #include <stdarg.h>
+
+static void hlog(const char *fmt, ...);
 
 static void write_result(const char *text)
 {
