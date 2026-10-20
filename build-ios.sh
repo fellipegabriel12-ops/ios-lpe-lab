@@ -63,7 +63,9 @@ codesign -s - --force "$APP/LPE" 2>/dev/null || true
 # viable #536 first-mapper and the DirtySlide chain needs no child process at all.
 APP2="$DIST2/Payload/LPE2.app"
 mkdir -p "$APP2"
-$CC -nostdlib -fno-stack-protector -Wl,-static -Wl,-e,_start -Wl,-no_pie -o "$APP2/LPE2" probe_static.c
+$CC -O0 -g -fno-builtin -fno-asynchronous-unwind-tables -fno-unwind-tables -fno-stack-protector \
+    -nostdlib -Wl,-static -Wl,-e,_start -Wl,-no_pie -Wl,-stack_addr,0x160000000 \
+    -Wl,-stack_size,0x100000 -Wl,-headerpad,0x1000 -o "$APP2/LPE2" probe_static.c
 cat > "$APP2/Info.plist" <<PLIST2
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
