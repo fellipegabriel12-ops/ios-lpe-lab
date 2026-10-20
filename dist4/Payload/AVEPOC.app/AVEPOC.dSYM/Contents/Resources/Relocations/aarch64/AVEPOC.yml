@@ -1,0 +1,15 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'dist4/Payload/AVEPOC.app/AVEPOC'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100004000, symSize: 0x22B8 }
+  - { offsetInCU: 0x41, offset: 0x41, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100004000, symSize: 0x22B8 }
+  - { offsetInCU: 0x66, offset: 0x66, size: 0x8, addend: 0x0, symName: _main.bigbuf, symObjAddr: 0x8B8C, symBinAddr: 0x100010000, symSize: 0x0 }
+  - { offsetInCU: 0x7C, offset: 0x7C, size: 0x8, addend: 0x0, symName: _main.cmdbuf, symObjAddr: 0xAFEC, symBinAddr: 0x100012460, symSize: 0x0 }
+  - { offsetInCU: 0x92, offset: 0x92, size: 0x8, addend: 0x0, symName: _main.outbuf, symObjAddr: 0x2508C, symBinAddr: 0x10002C500, symSize: 0x0 }
+  - { offsetInCU: 0xA8, offset: 0xA8, size: 0x8, addend: 0x0, symName: _main.zbig, symObjAddr: 0x250CC, symBinAddr: 0x10002C540, symSize: 0x0 }
+  - { offsetInCU: 0xBE, offset: 0xBE, size: 0x8, addend: 0x0, symName: _main.cbuf, symObjAddr: 0x450CC, symBinAddr: 0x10004C540, symSize: 0x0 }
+  - { offsetInCU: 0xD4, offset: 0xD4, size: 0x8, addend: 0x0, symName: _main.hv, symObjAddr: 0x45D8, symBinAddr: 0x10000C238, symSize: 0x0 }
+  - { offsetInCU: 0xAAB, offset: 0xAAB, size: 0x8, addend: 0x0, symName: _iOS_capture_output, symObjAddr: 0x22B8, symBinAddr: 0x1000062B8, symSize: 0x120 }
+  - { offsetInCU: 0xAFA, offset: 0xAFA, size: 0x8, addend: 0x0, symName: _kr_name, symObjAddr: 0x23D8, symBinAddr: 0x1000063D8, symSize: 0x938 }
+...
