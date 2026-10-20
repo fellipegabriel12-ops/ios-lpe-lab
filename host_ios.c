@@ -38,18 +38,16 @@
 #define _POSIX_SPAWN_RESLIDE 0x0080
 #endif
 
-/* --- mach_vm API, declared locally (iOS has the symbols, not the header) --- */
-typedef int kr_t;
-typedef unsigned long long vm_addr_t;
-typedef unsigned long long vm_size_t;
-typedef unsigned int natural_t;
-typedef int *vm_recurse_info_t;
-typedef int msg_type_t;
-
-extern kr_t mach_vm_read_overwrite(int target_task, vm_addr_t address, vm_size_t size,
-                                    vm_addr_t data, vm_size_t *out_size);
-extern kr_t mach_vm_region_recurse(int target_task, vm_addr_t *address, vm_size_t *size,
-                                    natural_t *depth, vm_recurse_info_t info, msg_type_t *count);
+/* --- mach_vm API: the iOS SDK ships the vm types (<mach/vm_types.h>) but not
+ *     <mach/mach_vm.h>, so declare just the two functions we need. The symbols are in
+ *     libsystem_kernel on iOS. --- */
+extern kern_return_t mach_vm_read_overwrite(vm_task_t target_task, vm_address_t address,
+                                             vm_size_t size, vm_address_t data,
+                                             vm_size_t *out_size);
+extern kern_return_t mach_vm_region_recurse(vm_task_t target_task, vm_address_t *address,
+                                             vm_size_t *size, natural_t *depth,
+                                             void *info,
+                                             mach_msg_type_number_t *count);
 
 #include "probe_off.h"   /* generated: #define PROBE_OFFSET 0x... (child_probe - __TEXT base) */
 
@@ -58,24 +56,24 @@ extern char **environ;
 #define VM_REGION_SUBMAP_INFO_COUNT_64 4096
 
 /* Find the load base of the main MH_EXECUTE image in the target task. */
-static vm_addr_t find_exec_base(int task)
+static vm_address_t find_exec_base(vm_task_t task)
 {
-	vm_addr_t addr = 0;
+	vm_address_t addr = 0;
 	vm_size_t size = 0;
 	natural_t depth = 0;
 
 	for (;;) {
 		uint8_t buf[512];
 		msg_type_t cnt = VM_REGION_SUBMAP_INFO_COUNT_64;
-		kr_t kr = mach_vm_region_recurse(task, &addr, &size, &depth,
-		    (vm_recurse_info_t)buf, &cnt);
+		kern_return_t kr = mach_vm_region_recurse(task, &addr, &size, &depth,
+		    (void *)buf, &cnt);
 		if (kr != 0)
 			break;
 
 		uint32_t hdr[4] = {0};
 		vm_size_t got = 0;
 		if (mach_vm_read_overwrite(task, addr, sizeof(hdr),
-		        (vm_addr_t)hdr, &got) == 0 &&
+		        (vm_address_t)hdr, &got) == 0 &&
 		    got == sizeof(hdr) &&
 		    hdr[0] == MH_MAGIC_64 &&
 		    hdr[3] == MH_EXECUTE) {
@@ -127,8 +125,8 @@ int main(int argc, char **argv)
 	}
 	fprintf(stderr, "[host] spawned child pid=%d (suspended, reslide)\n", pid);
 
-	int ctask = 0;
-	kr_t kr = task_for_pid(mach_task_self(), pid, &ctask);
+	task_t ctask = TASK_NULL;
+	kern_return_t kr = task_for_pid(mach_task_self(), pid, &ctask);
 	if (kr != 0) {
 		fprintf(stderr, "[host] task_for_pid failed: %s (0x%x). "
 		    "child needs get-task-allow, or run as root.\n",
@@ -148,13 +146,13 @@ int main(int argc, char **argv)
 	}
 	thread_t th = threads[0];
 
-	vm_addr_t base = find_exec_base(ctask);
+	vm_address_t base = find_exec_base(ctask);
 	if (base == 0) {
 		fprintf(stderr, "[host] could not locate child exec base\n");
 		kill(pid, SIGKILL);
 		return 1;
 	}
-	vm_addr_t probe = base + PROBE_OFFSET;
+	vm_address_t probe = base + PROBE_OFFSET;
 	fprintf(stderr, "[host] child exec base=0x%llx child_probe=0x%llx\n",
 	    (unsigned long long)base, (unsigned long long)probe);
 
