@@ -94,8 +94,7 @@ echo "[+] built dist2/LPE2.ipa"
 # ---- VideoToolbox trigger harness (LPE3) ---------------------------------------
 APP3="$DIST3/Payload/VT3.app"
 mkdir -p "$APP3"
-$CC -x objective-c -fobjc-arc -O0 -g -o "$APP3/VT3" vt_probe.m \
-    -framework Foundation -framework VideoToolbox -framework CoreMedia -framework CoreVideo
+$CC -x objective-c -O0 -g -o "$APP3/VT3" vt_probe.m -framework Foundation -framework VideoToolbox -framework CoreMedia -framework CoreVideo
 cat > "$APP3/Info.plist" <<PLIST3
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
