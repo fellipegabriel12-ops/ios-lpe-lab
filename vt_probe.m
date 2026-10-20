@@ -135,11 +135,11 @@ int main(void)
 		for (int i = 0; i < frames; i++) {
 			CMTime pts = CMTimeMake(i, 30);
 			CMTime dur = CMTimeMake(1, 30);
-			st = VTCompressionSessionEncodeFrame(sess, pb, pts, dur, NULL, NULL);
+			st = VTCompressionSessionEncodeFrame(sess, pb, pts, dur, NULL, NULL, NULL);
 			logline("[vt] submit frame %d -> %d", i, (int)st);
 			if (slow) usleep(slow);
 		}
-		VTCompressionSessionCompleteFrames(sess, 0xffffffff);
+		VTCompressionSessionCompleteFrames(sess, CMTimeMake(1, 30));
 		logline("[vt] done");
 		VTCompressionSessionInvalidate(sess);
 		CFRelease(sess);
