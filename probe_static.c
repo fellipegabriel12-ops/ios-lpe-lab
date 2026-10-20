@@ -25,6 +25,29 @@
 #define SYS_mkdir                488
 #define SYS_shared_region_check  294
 
+
+/* the toolchain's crt __start shim pulls in _bzero (and friends) from libSystem; with
+   -nostdlib we must provide them ourselves */
+void _bzero(void *dst, unsigned long n)
+{
+	unsigned char *d = (unsigned char *)dst;
+	while (n--) *d++ = 0;
+}
+void *memset(void *d, int ch, unsigned long n)
+{
+	unsigned char *p = (unsigned char *)d;
+	unsigned char v = (unsigned char)ch;
+	while (n--) *p++ = v;
+	return d;
+}
+void *memcpy(void *d, const void *s, unsigned long n)
+{
+	unsigned char *p = (unsigned char *)d;
+	const unsigned char *q = (const unsigned char *)s;
+	while (n--) *p++ = *q++;
+	return d;
+}
+
 static long sc6(long num, long a0, long a1, long a2, long a3, long a4, long a5, int *err)
 {
 	register long x16 asm("x16") = num;
