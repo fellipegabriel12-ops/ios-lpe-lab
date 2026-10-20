@@ -1,0 +1,16 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'dist/Payload/LPE.app/LPE'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100004000, symSize: 0x898 }
+  - { offsetInCU: 0x4D, offset: 0x4D, size: 0x8, addend: 0x0, symName: _g_len, symObjAddr: 0x3B08, symBinAddr: 0x10000C000, symSize: 0x0 }
+  - { offsetInCU: 0x7F, offset: 0x7F, size: 0x8, addend: 0x0, symName: _g_out, symObjAddr: 0x3B10, symBinAddr: 0x10000C008, symSize: 0x0 }
+  - { offsetInCU: 0x13D, offset: 0x13D, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100004000, symSize: 0x898 }
+  - { offsetInCU: 0x41E, offset: 0x41E, size: 0x8, addend: 0x0, symName: _say, symObjAddr: 0x898, symBinAddr: 0x100004898, symSize: 0xF8 }
+  - { offsetInCU: 0x46D, offset: 0x46D, size: 0x8, addend: 0x0, symName: _region_state, symObjAddr: 0x990, symBinAddr: 0x100004990, symSize: 0x44 }
+  - { offsetInCU: 0x4A3, offset: 0x4A3, size: 0x8, addend: 0x0, symName: _try_spawn, symObjAddr: 0x9D4, symBinAddr: 0x1000049D4, symSize: 0x1A4 }
+  - { offsetInCU: 0x53C, offset: 0x53C, size: 0x8, addend: 0x0, symName: _try_spawn_flags, symObjAddr: 0xB78, symBinAddr: 0x100004B78, symSize: 0x168 }
+  - { offsetInCU: 0x5E5, offset: 0x5E5, size: 0x8, addend: 0x0, symName: _find_exec_base, symObjAddr: 0xCE0, symBinAddr: 0x100004CE0, symSize: 0x110 }
+  - { offsetInCU: 0x67D, offset: 0x67D, size: 0x8, addend: 0x0, symName: _flush_result, symObjAddr: 0xDF0, symBinAddr: 0x100004DF0, symSize: 0x174 }
+  - { offsetInCU: 0x6CE, offset: 0x6CE, size: 0x8, addend: 0x0, symName: _raw_syscall, symObjAddr: 0xF64, symBinAddr: 0x100004F64, symSize: 0xF4 }
+...
