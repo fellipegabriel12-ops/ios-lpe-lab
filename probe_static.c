@@ -91,7 +91,21 @@ static void unum(char *d, unsigned long v)
 	d[k] = 0;
 }
 
+static void probe_main(void);
+
 void _start(void)
+{
+	probe_main();
+	__builtin_unreachable();
+}
+
+int main(void)
+{
+	probe_main();
+	return 0;
+}
+
+static void probe_main(void)
 {
 	uint64_t *sp;
 	__asm__ volatile("mov %0, sp" : "=r"(sp));
