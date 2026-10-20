@@ -1,0 +1,23 @@
+name: build-ios-lpe
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: build
+        run: |
+          chmod +x build-ios.sh
+          ./build-ios.sh
+      - name: show offsets
+        run: cat probe_off.h trig_off.h || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-lpe
+          path: |
+            dist/LPE.ipa
+            dist/Payload/LPE.app/LPE
+            probe_off.h
+            trig_off.h
