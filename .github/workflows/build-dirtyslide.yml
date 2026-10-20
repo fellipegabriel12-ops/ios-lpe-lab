@@ -24,7 +24,7 @@ jobs:
             -configuration Release \
             CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
             DEVELOPMENT_TEAM="" PRODUCT_BUNDLE_IDENTIFIER=com.lab.dirtyslide \
-            ARCHS=arm64 ONLY_ACTIVE_ARCH=NO build
+            ARCHS=arm64e ONLY_ACTIVE_ARCH=NO build
           APP=$(find "$PWD/build/Build/Products" -maxdepth 2 -name "*.app" -type d | head -1)
           echo "APP=$APP"
           ls -la "$APP"
