@@ -63,7 +63,7 @@ static void hlog(const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
     os_log_with_type(OS_LOG_DEFAULT, "%{public}s", buf);
-    hlog("%s", buf);
+    fprintf(stderr, "%s", buf);
 }
 
 #include "probe_off.h"   /* generated: #define PROBE_OFFSET 0x... (child_probe - __TEXT base) */
