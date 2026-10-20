@@ -54,8 +54,24 @@ extern kern_return_t mach_vm_region_recurse(vm_task_t target_task, vm_address_t 
                                              mach_msg_type_number_t *count);
 
 #include <os/log.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <stdarg.h>
 
+static void write_result(const char *text)
+{
+    const char *home = getenv("HOME");
+    if (!home) { hlog("no HOME\n"); return; }
+    char dir[1024], path[1200];
+    snprintf(dir, sizeof(dir), "%s/Documents", home);
+    mkdir(dir, 0755);
+    snprintf(path, sizeof(path), "%s/result.txt", dir);
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) { hlog("open(%s) failed errno=%d\n", path, errno); return; }
+    write(fd, text, strlen(text));
+    close(fd);
+    hlog("wrote %s\n", path);
+}
 static void hlog(const char *fmt, ...)
 {
     char buf[1024];
@@ -138,6 +154,8 @@ int main(int argc, char **argv)
 	posix_spawnattr_destroy(&attr);
 	if (rc != 0) {
 		hlog("[host] posix_spawn failed: %s (%d)\n", strerror(rc), rc);
+		{ char r[256]; snprintf(r, sizeof(r), "spawn_failed errno=%d
+", rc); write_result(r); }
 		return 1;
 	}
 	hlog("[host] spawned child pid=%d (suspended, reslide)\n", pid);
@@ -148,6 +166,7 @@ int main(int argc, char **argv)
 		hlog("[host] task_for_pid failed: %s (0x%x). "
 		    "child needs get-task-allow, or run as root.\n",
 		    mach_error_string(kr), kr);
+		char r[256]; snprintf(r, sizeof(r), "task_for_pid_failed kr=0x%x\n", kr); write_result(r);
 		kill(pid, SIGKILL);
 		return 1;
 	}
@@ -215,9 +234,11 @@ int main(int argc, char **argv)
 		    code == 22 ? "EINVAL: no region bound" :
 		                 "unexpected";
 		hlog("[host] child_probe exit=%d  (%s)\n", code, meaning);
+		char r[256]; snprintf(r, sizeof(r), "child_probe_exit=%d meaning=%s\n", code, meaning); write_result(r);
 	} else if (WIFSIGNALED(status)) {
 		hlog("[host] child killed by signal %d "
 		    "(hijack/PAC/exec issue -- inspect)\n", WTERMSIG(status));
+		char r[256]; snprintf(r, sizeof(r), "child_killed_signal=%d\n", WTERMSIG(status)); write_result(r);
 	}
 	return 0;
 }
