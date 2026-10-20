@@ -12,6 +12,7 @@ SDK=$(xcrun --sdk iphoneos --show-sdk-path)
 ARCH=arm64
 DIST=dist
 DIST2=dist2
+DIST3=dist3
 APP="$DIST/Payload/LPE.app"
 CC="clang -arch $ARCH -isysroot $SDK -miphoneos-version-min=16.0 -O0 -g -Wall -fno-stack-protector"
 
@@ -72,7 +73,7 @@ cat > "$APP2/Info.plist" <<PLIST2
 <plist version="1.0">
 <dict>
   <key>CFBundleExecutable</key><string>LPE2</string>
-  <key>CFBundleIdentifier</key><string>com.lab.lpe2</string>
+  <key>CFBundleIdentifier</key><string>com.lab.probe</string>
   <key>CFBundleName</key><string>LPE2</string>
   <key>CFBundleVersion</key><string>1.0</string>
   <key>CFBundleShortVersionString</key><string>1.0</string>
@@ -90,6 +91,37 @@ rm -f LPE2.ipa
 zip -q -r -X LPE2.ipa Payload
 cd ..
 echo "[+] built dist2/LPE2.ipa"
+# ---- VideoToolbox trigger harness (LPE3) ---------------------------------------
+APP3="$DIST3/Payload/VT3.app"
+mkdir -p "$APP3"
+$CC -x objective-c -fobjc-arc -O0 -g -o "$APP3/VT3" vt_probe.m \
+    -framework Foundation -framework VideoToolbox -framework CoreMedia -framework CoreVideo
+cat > "$APP3/Info.plist" <<PLIST3
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key><string>VT3</string>
+  <key>CFBundleIdentifier</key><string>com.lab.vtprobe</string>
+  <key>CFBundleName</key><string>VT3</string>
+  <key>CFBundleVersion</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>LSRequiresIPhoneOS</key><true/>
+  <key>MinimumOSVersion</key><string>16.0</string>
+  <key>UIDeviceFamily</key><array><integer>1</integer></array>
+  <key>UILaunchScreen</key><dict/>
+  <key>UIBackgroundModes</key><array><string>audio</string></array>
+</dict>
+</plist>
+PLIST3
+codesign -s - --force "$APP3/VT3" 2>/dev/null || true
+cd "$DIST3"
+rm -f VT3.ipa
+zip -q -r -X VT3.ipa Payload
+cd ..
+echo "[+] built dist3/VT3.ipa"
+
 cd "$DIST"
 rm -f LPE.ipa
 zip -q -r -X LPE.ipa Payload
