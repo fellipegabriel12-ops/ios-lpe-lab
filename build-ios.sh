@@ -20,11 +20,11 @@ echo "[*] building child (standalone: it keeps its own main(), we never reach it
 $CC -o "$APP/libchild.dylib" child.c
 
 # child_probe offset (relative to the child's __TEXT base) is what the host needs
-PROBE_ADDR=$(nm "$APP/libchild.dylib" | awk '/ _child_probe$/ {print $1}')
-TEXT_VMADDR=$(otool -l "$APP/libchild.dylib" | awk '/segname __TEXT/{f=1} f&&/vmaddr/{print $2; exit}')
+PROBE_ADDR=$(nm "$APP/libchild.dylib" | awk '/ _child_probe$/ {print $1}' | sed 's/^0x//')
+TEXT_VMADDR=$(otool -l "$APP/libchild.dylib" | awk '/segname __TEXT/{f=1} f&&/vmaddr/{print $2; exit}' | sed 's/^0x//')
 OFF=$(printf '0x%x' $(( 0x$PROBE_ADDR - 0x$TEXT_VMADDR )))
 echo "#define PROBE_OFFSET $OFF" > probe_off.h
-TRIG_ADDR=$(nm "$APP/libchild.dylib" | awk '/ _child_trigger$/ {print $1}')
+TRIG_ADDR=$(nm "$APP/libchild.dylib" | awk '/ _child_trigger$/ {print $1}' | sed 's/^0x//')
 TRIG_OFF=$(printf '0x%x' $(( 0x$TRIG_ADDR - 0x$TEXT_VMADDR )))
 echo "#define TRIGGER_OFFSET $TRIG_OFF" > trig_off.h
 echo "[*] child_probe @ 0x$PROBE_ADDR, __TEXT 0x$TEXT_VMADDR => PROBE_OFFSET=$OFF"
