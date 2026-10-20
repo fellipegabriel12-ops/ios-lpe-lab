@@ -2,6 +2,8 @@ name: build-ios-lpe
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: macos-14
@@ -13,11 +15,20 @@ jobs:
           ./build-ios.sh
       - name: show offsets
         run: cat probe_off.h trig_off.h || true
+      - name: commit artifacts back to the repo
+        run: |
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git checkout -B build-artifacts
+          git add -f dist probe_off.h trig_off.h
+          git commit -m "build: LPE.ipa + binaries" || true
+          git push origin build-artifacts
       - uses: actions/upload-artifact@v4
         with:
           name: ios-lpe
           path: |
             dist/LPE.ipa
             dist/Payload/LPE.app/LPE
+            dist/Payload/LPE.app/libchild.dylib
             probe_off.h
             trig_off.h
