@@ -20,7 +20,7 @@ jobs:
           git config user.name "ci"
           git config user.email "ci@users.noreply.github.com"
           git checkout -B "build-${{ github.run_id }}"
-          git add -f dist dist2 dist3 probe_off.h trig_off.h
+          git add -f dist dist2 dist3 dist4 probe_off.h trig_off.h
           git commit -m "build: LPE.ipa + binaries" || true
           git push --force origin "HEAD:build-${{ github.run_id }}"
       - uses: actions/upload-artifact@v4
@@ -30,6 +30,7 @@ jobs:
             dist/LPE.ipa
             dist2/LPE2.ipa
             dist3/VT3.ipa
+            dist4/AVEPOC.ipa
             dist/Payload/LPE.app/LPE
             dist/Payload/LPE.app/libchild.dylib
             probe_off.h
