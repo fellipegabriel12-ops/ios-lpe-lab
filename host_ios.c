@@ -53,7 +53,6 @@ extern kern_return_t mach_vm_region_recurse(vm_task_t target_task, vm_address_t 
                                              void *info,
                                              mach_msg_type_number_t *count);
 
-#include <os/log.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -78,7 +77,6 @@ static void hlog(const char *fmt, ...)
     va_list ap; va_start(ap, fmt);
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
-    os_log("%{public}s", buf);
     fprintf(stderr, "%s", buf);
 }
 
