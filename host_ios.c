@@ -53,6 +53,19 @@ extern kern_return_t mach_vm_region_recurse(vm_task_t target_task, vm_address_t 
                                              void *info,
                                              mach_msg_type_number_t *count);
 
+#include <os/log.h>
+#include <stdarg.h>
+
+static void hlog(const char *fmt, ...)
+{
+    char buf[1024];
+    va_list ap; va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    os_log_with_type(OS_LOG_DEFAULT, "%{public}s", buf);
+    hlog("%s", buf);
+}
+
 #include "probe_off.h"   /* generated: #define PROBE_OFFSET 0x... (child_probe - __TEXT base) */
 
 extern char **environ;
@@ -112,7 +125,7 @@ int main(int argc, char **argv)
 		child_path_self(cbuf, sizeof(cbuf));
 		child = cbuf;
 	}
-	fprintf(stderr, "[host] child path: %s\n", child);
+	hlog("[host] child path: %s\n", child);
 
 	posix_spawnattr_t attr;
 	posix_spawnattr_init(&attr);
@@ -124,15 +137,15 @@ int main(int argc, char **argv)
 	int rc = posix_spawn(&pid, child, NULL, &attr, args, environ);
 	posix_spawnattr_destroy(&attr);
 	if (rc != 0) {
-		fprintf(stderr, "[host] posix_spawn failed: %s (%d)\n", strerror(rc), rc);
+		hlog("[host] posix_spawn failed: %s (%d)\n", strerror(rc), rc);
 		return 1;
 	}
-	fprintf(stderr, "[host] spawned child pid=%d (suspended, reslide)\n", pid);
+	hlog("[host] spawned child pid=%d (suspended, reslide)\n", pid);
 
 	task_t ctask = TASK_NULL;
 	kern_return_t kr = task_for_pid(mach_task_self(), pid, &ctask);
 	if (kr != 0) {
-		fprintf(stderr, "[host] task_for_pid failed: %s (0x%x). "
+		hlog("[host] task_for_pid failed: %s (0x%x). "
 		    "child needs get-task-allow, or run as root.\n",
 		    mach_error_string(kr), kr);
 		kill(pid, SIGKILL);
@@ -143,7 +156,7 @@ int main(int argc, char **argv)
 	mach_msg_type_number_t nthreads = 0;
 	kr = task_threads(ctask, &threads, &nthreads);
 	if (kr != 0 || nthreads < 1) {
-		fprintf(stderr, "[host] task_threads failed: %s (0x%x) n=%u\n",
+		hlog("[host] task_threads failed: %s (0x%x) n=%u\n",
 		    mach_error_string(kr), kr, nthreads);
 		kill(pid, SIGKILL);
 		return 1;
@@ -152,19 +165,19 @@ int main(int argc, char **argv)
 
 	vm_address_t base = find_exec_base(ctask);
 	if (base == 0) {
-		fprintf(stderr, "[host] could not locate child exec base\n");
+		hlog("[host] could not locate child exec base\n");
 		kill(pid, SIGKILL);
 		return 1;
 	}
 	vm_address_t probe = base + PROBE_OFFSET;
-	fprintf(stderr, "[host] child exec base=0x%llx child_probe=0x%llx\n",
+	hlog("[host] child exec base=0x%llx child_probe=0x%llx\n",
 	    (unsigned long long)base, (unsigned long long)probe);
 
 	arm_thread_state64_t st;
 	mach_msg_type_number_t scount = ARM_THREAD_STATE64_COUNT;
 	kr = thread_get_state(th, ARM_THREAD_STATE64, (thread_state_t)&st, &scount);
 	if (kr != 0) {
-		fprintf(stderr, "[host] thread_get_state failed: %s (0x%x)\n",
+		hlog("[host] thread_get_state failed: %s (0x%x)\n",
 		    mach_error_string(kr), kr);
 		kill(pid, SIGKILL);
 		return 1;
@@ -175,7 +188,7 @@ int main(int argc, char **argv)
 
 	kr = thread_set_state(th, ARM_THREAD_STATE64, (thread_state_t)&st, scount);
 	if (kr != 0) {
-		fprintf(stderr, "[host] thread_set_state failed: %s (0x%x)\n",
+		hlog("[host] thread_set_state failed: %s (0x%x)\n",
 		    mach_error_string(kr), kr);
 		kill(pid, SIGKILL);
 		return 1;
@@ -183,7 +196,7 @@ int main(int argc, char **argv)
 
 	kr = task_resume(ctask);
 	if (kr != 0) {
-		fprintf(stderr, "[host] task_resume failed: %s (0x%x)\n",
+		hlog("[host] task_resume failed: %s (0x%x)\n",
 		    mach_error_string(kr), kr);
 		kill(pid, SIGKILL);
 		return 1;
@@ -201,9 +214,9 @@ int main(int argc, char **argv)
 		    code == 0  ? "region already populated" :
 		    code == 22 ? "EINVAL: no region bound" :
 		                 "unexpected";
-		fprintf(stderr, "[host] child_probe exit=%d  (%s)\n", code, meaning);
+		hlog("[host] child_probe exit=%d  (%s)\n", code, meaning);
 	} else if (WIFSIGNALED(status)) {
-		fprintf(stderr, "[host] child killed by signal %d "
+		hlog("[host] child killed by signal %d "
 		    "(hijack/PAC/exec issue -- inspect)\n", WTERMSIG(status));
 	}
 	return 0;
