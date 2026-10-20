@@ -20,11 +20,11 @@ jobs:
           sed -i '' 's#/System/Cryptexes/OS/System/Library/Caches/com.apple.dyld/#/System/Library/Caches/com.apple.dyld/#g' DirtySlide/myimpl.m DirtySlide/main.m || true
           grep -n "dyld_shared_cache_arm64e" DirtySlide/myimpl.m DirtySlide/main.m || true
           xcodebuild -project DirtySlide.xcodeproj -target DirtySlide -sdk iphoneos \
-            -configuration Release -derivedDataPath "$PWD/dd" \
+            -configuration Release \
             CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
             DEVELOPMENT_TEAM="" PRODUCT_BUNDLE_IDENTIFIER=com.lab.dirtyslide \
             ARCHS=arm64 ONLY_ACTIVE_ARCH=NO build
-          APP=$(find "$PWD/dd/Build/Products" -maxdepth 2 -name "*.app" -type d | head -1)
+          APP=$(find "$PWD/build/Build/Products" -maxdepth 2 -name "*.app" -type d | head -1)
           echo "APP=$APP"
           ls -la "$APP"
           rm -rf dist && mkdir -p dist/Payload
@@ -36,7 +36,7 @@ jobs:
       - name: show the built binary
         run: |
           set -e
-          APP=$(find "$PWD/dd/Build/Products" -maxdepth 2 -name "*.app" -type d | head -1)
+          APP=$(find "$PWD/build/Build/Products" -maxdepth 2 -name "*.app" -type d | head -1)
           file "$APP/DirtySlide" || true
           otool -L "$APP/DirtySlide" 2>/dev/null | head -20 || true
       - name: commit artifacts
