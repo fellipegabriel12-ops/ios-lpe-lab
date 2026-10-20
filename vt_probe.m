@@ -53,7 +53,7 @@ static void logline(const char *fmt, ...)
 }
 
 static void enc_cb(void *refcon, void *srcFrameRefcon, OSStatus status,
-                   VTEncodeInfoFlags flags, void *sampleBuffer)
+                   VTEncodeInfoFlags flags, CMSampleBufferRef sampleBuffer)
 {
 	(void)refcon; (void)srcFrameRefcon; (void)flags; (void)sampleBuffer;
 	logline("[vt] encode callback status=%d", (int)status);
@@ -86,7 +86,7 @@ int main(void)
 			(__bridge id)kCVPixelBufferIOSurfacePropertiesKey : @{},
 		};
 		if (CVPixelBufferCreate(NULL, w, h, kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
-		        (__bridge CFDictionaryRef)pa, NULL, &pb) != kCVReturnSuccess || !pb) {
+		        (__bridge CFDictionaryRef)pa, &pb) != kCVReturnSuccess || !pb) {
 			logline("[vt] pixelbuffer failed");
 			return 1;
 		}
@@ -135,7 +135,7 @@ int main(void)
 		for (int i = 0; i < frames; i++) {
 			CMTime pts = CMTimeMake(i, 30);
 			CMTime dur = CMTimeMake(1, 30);
-			st = VTCompressionSessionEncodeFrame(sess, pb, pts, dur, NULL, NULL, NULL);
+			st = VTCompressionSessionEncodeFrame(sess, pb, pts, dur, NULL, NULL);
 			logline("[vt] submit frame %d -> %d", i, (int)st);
 			if (slow) usleep(slow);
 		}
