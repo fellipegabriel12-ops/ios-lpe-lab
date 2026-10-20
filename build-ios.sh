@@ -13,6 +13,7 @@ ARCH=arm64
 DIST=dist
 DIST2=dist2
 DIST3=dist3
+DIST4=dist4
 APP="$DIST/Payload/LPE.app"
 CC="clang -arch $ARCH -isysroot $SDK -miphoneos-version-min=16.0 -O0 -g -Wall -fno-stack-protector"
 
@@ -101,7 +102,7 @@ cat > "$APP3/Info.plist" <<PLIST3
 <plist version="1.0">
 <dict>
   <key>CFBundleExecutable</key><string>VT3</string>
-  <key>CFBundleIdentifier</key><string>com.lab.vtprobe</string>
+  <key>CFBundleIdentifier</key><string>com.lab.lpe</string>
   <key>CFBundleName</key><string>VT3</string>
   <key>CFBundleVersion</key><string>1.0</string>
   <key>CFBundleShortVersionString</key><string>1.0</string>
@@ -120,6 +121,35 @@ rm -f VT3.ipa
 zip -q -r -X VT3.ipa Payload
 cd ..
 echo "[+] built dist3/VT3.ipa"
+
+# ---- AppleAVE2 IOKit PoC (CVE-2026-64747 reachability + overflow attempt) ------
+APP4="$DIST4/Payload/AVEPOC.app"
+mkdir -p "$APP4"
+$CC -O0 -g -o "$APP4/AVEPOC" poc_ave2_reach.c -framework IOKit -framework CoreFoundation
+cat > "$APP4/Info.plist" <<PLIST4
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key><string>AVEPOC</string>
+  <key>CFBundleIdentifier</key><string>com.lab.lpe</string>
+  <key>CFBundleName</key><string>AVEPOC</string>
+  <key>CFBundleVersion</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>LSRequiresIPhoneOS</key><true/>
+  <key>MinimumOSVersion</key><string>16.0</string>
+  <key>UIDeviceFamily</key><array><integer>1</integer></array>
+  <key>UILaunchScreen</key><dict/>
+</dict>
+</plist>
+PLIST4
+codesign -s - --force "$APP4/AVEPOC" 2>/dev/null || true
+cd "$DIST4"
+rm -f AVEPOC.ipa
+zip -q -r -X AVEPOC.ipa Payload
+cd ..
+echo "[+] built dist4/AVEPOC.ipa"
 
 cd "$DIST"
 rm -f LPE.ipa
