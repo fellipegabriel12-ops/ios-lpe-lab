@@ -1,0 +1,55 @@
+name: build-dirtyslide-ios
+on:
+  push:
+    paths:
+      - 'dirtyslide/**'
+      - '.github/workflows/build-dirtyslide.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: build the iOS payload
+        run: |
+          set -e
+          cd dirtyslide
+          # iOS keeps the dyld cache outside the Cryptexes/OS prefix
+          sed -i '' 's#/System/Cryptexes/OS/System/Library/Caches/com.apple.dyld/#/System/Library/Caches/com.apple.dyld/#g' DirtySlide/myimpl.m DirtySlide/main.m || true
+          grep -n "dyld_shared_cache_arm64e" DirtySlide/myimpl.m DirtySlide/main.m || true
+          xcodebuild -project DirtySlide.xcodeproj -target DirtySlide -sdk iphoneos \
+            -configuration Release -derivedDataPath "$PWD/dd" \
+            CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM="" PRODUCT_BUNDLE_IDENTIFIER=com.lab.dirtyslide \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=NO build
+          APP=$(find "$PWD/dd/Build/Products" -maxdepth 2 -name "*.app" -type d | head -1)
+          echo "APP=$APP"
+          ls -la "$APP"
+          rm -rf dist && mkdir -p dist/Payload
+          cp -R "$APP" dist/Payload/
+          # ensure the payload dylibs keep their exec bits
+          chmod -R +x dist/Payload/*.app/Frameworks 2>/dev/null || true
+          cd dist && zip -q -r -X ../DirtySlide.ipa Payload && cd ..
+          ls -la DirtySlide.ipa
+      - name: show the built binary
+        run: |
+          set -e
+          APP=$(find "$PWD/dd/Build/Products" -maxdepth 2 -name "*.app" -type d | head -1)
+          file "$APP/DirtySlide" || true
+          otool -L "$APP/DirtySlide" 2>/dev/null | head -20 || true
+      - name: commit artifacts
+        run: |
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git checkout -B build-dirtyslide
+          git add -f dist DirtySlide.ipa
+          git commit -m "build: DirtySlide.ipa" || true
+          git push --force origin "HEAD:build-dirtyslide"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dirtyslide-ios
+          path: |
+            DirtySlide.ipa
+            dist/**
