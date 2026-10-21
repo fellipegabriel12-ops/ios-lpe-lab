@@ -985,3 +985,33 @@
 - Apple's throttle on the app-token request (-80046) and now the login (503). The queue is running with
   20-60 minute backoffs and re-mints the anisette identity on every throttle, because the throttle may
   be per-identity rather than per-account. CGDEC is queued. Everything else is ready.
+
+## 2026-10-21 ~17:45Z O-C ("jailbreak 3") - SAVED AND SHUTTING DOWN (He is going to bed)
+### SAVED - pushed to github.com/fellipegabriel12-ops/ios-lpe-lab @ 0a7c573
+  tools/  every piece of automation we built, plus the crafted payloads (exact bytes)
+  docs/   RESUME.md (the pick-up map), PLAN-26.4-CHAIN.md, JOINT-LOG.md, COMMS-O2O.md
+  On disk: G:\op lab\iphone-control\jailbreak (the IPSWs stay here, they are 30 GB and are
+  NOT in git for that reason).
+### STATE AT SHUTDOWN
+- Apple ID login, anisette, and 2FA capture are FULLY AUTOMATED and working.
+- The install is the only thing not working, and it is Apple's 503/-80046 rate limiter on
+  gsa.apple.com/GSService2, not our code. Diagnosis is in RESUME.md section 3: a freshly
+  minted anisette identity against the real account is what the edge refuses, while the same
+  identity against a fake account returns a clean 200.
+- The kill-shot payloads are BUILT, BYTE-VERIFIED, and ALREADY ON THE PHONE (20 files in
+  com.lab.lpe.2BGBD62KA3/Documents): the 4097-MB crafted H.264 ladder, the level/dimension
+  mismatch variants, and the califio CVE-2026-86950 PDF+TTF.
+- The harness that fires them is built (CGDEC.ipa, full-resolution ImageIO decode) and
+  o_c_fire.ps1 runs the whole sequence in one command.
+- CVE-2026-84607's fix is CONFIRMED ABSENT on our 26.4 AppleAVE2 (no "EncType mismatch with
+  session" string) - the race that gives a sandboxed app kernel code execution is open here.
+- The DirtySlide iOS port is in the CI (build target added, commit ab06795) and its full
+  escalation (phys scan -> kernel credential patch -> root) is in the tree as
+  src/t_reslide_zf.c with the ORACLE_* defines already in the iOS xcconfig. Porting that is
+  the next big piece of work, and it is what turns a kernel panic into a root shell.
+### FIRST MOVES WHEN HE COMES BACK
+  1. start-tunnel.ps1 (the tunnel dies with an opencode crash)
+  2. o_c_code_watch.py (the eyes) and o_c_jb.py install ... (the installer) - two commands
+  3. the moment "App installed successfully" appears: powershell -File o_c_fire.ps1
+  4. read the outcome: process died mid-report = the bug fired; clean report = the client refused
+EOF_MARKER_UNUSED
