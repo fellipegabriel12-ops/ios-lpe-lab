@@ -16,7 +16,11 @@ DIST3=dist3
 DIST4=dist4
 DIST5=dist5
 APP="$DIST/Payload/LPE.app"
-CC="clang -arch $ARCH -isysroot $SDK -miphoneos-version-min=16.0 -O0 -g -Wall -fno-stack-protector"
+# -Wl,-ld_classic: Xcode 16.4's new linker asserts in HeaderWriter::setCustomStackSize
+# while writing the entry point for plain arm64 executables (the host link died with
+# "ld: Assertion failed: (found), function setCustomStackSize, HeaderWriter.cpp:652").
+# The classic linker has no such assert and natively handles -stack_addr/-stack_size.
+CC="clang -arch $ARCH -isysroot $SDK -miphoneos-version-min=16.0 -O0 -g -Wall -fno-stack-protector -Wl,-ld_classic"
 
 mkdir -p "$APP"
 
@@ -66,9 +70,16 @@ codesign -s - --force "$APP/LPE" 2>/dev/null || true
 # viable #536 first-mapper and the DirtySlide chain needs no child process at all.
 APP2="$DIST2/Payload/LPE2.app"
 mkdir -p "$APP2"
-$CC -O0 -g -fno-builtin -fno-asynchronous-unwind-tables -fno-unwind-tables -fno-stack-protector \
+# The static link uses -stack_addr/-stack_size: ld64 on newer Xcode asserts on them.
+# Treat a failure here as non-fatal so the rest of the payloads still get built.
+if $CC -O0 -g -fno-builtin -fno-asynchronous-unwind-tables -fno-unwind-tables -fno-stack-protector \
     -nostdlib -Wl,-static -Wl,-e,_start -Wl,-no_pie -Wl,-stack_addr,0x160000000 \
-    -Wl,-stack_size,0x100000 -Wl,-headerpad,0x1000 -o "$APP2/LPE2" probe_static.c
+    -Wl,-stack_size,0x100000 -Wl,-headerpad,0x1000 -o "$APP2/LPE2" probe_static.c 2>&1; then
+  echo "[+] LPE2 linked"
+else
+  echo "[!] LPE2 static link failed (ld64 stack_addr assertion) - continuing without it"
+  rm -f "$APP2/LPE2"
+fi
 cat > "$APP2/Info.plist" <<PLIST2
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

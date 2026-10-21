@@ -39,10 +39,14 @@ jobs:
           chmod -R +x dist/Payload/*.app/Frameworks 2>/dev/null || true
           cd dist && zip -q -r -X ../DirtySlide.ipa Payload && cd ..
           ls -la DirtySlide.ipa
+          # put the ipa at the repo root so the commit/upload steps can see it
+          cp -f DirtySlide.ipa "$GITHUB_WORKSPACE/DirtySlide.ipa"
+          ls -la "$GITHUB_WORKSPACE/DirtySlide.ipa"
       - name: show the built binary
         run: |
           set -e
           xcodebuild -version
+          cd dirtyslide
           APP=$(find "$PWD/build" -maxdepth 4 -name "DirtySlide.app" -type d 2>/dev/null | head -1)
           echo "APP=$APP"
           file "$APP/DirtySlide" || true
@@ -53,7 +57,7 @@ jobs:
           git config user.name "ci"
           git config user.email "ci@users.noreply.github.com"
           git checkout -B build-dirtyslide
-          git add -f dist DirtySlide.ipa
+          git add -f dirtyslide/dist DirtySlide.ipa
           git commit -m "build: DirtySlide.ipa" || true
           git push --force origin "HEAD:build-dirtyslide"
       - uses: actions/upload-artifact@v4
@@ -61,4 +65,4 @@ jobs:
           name: dirtyslide-ios
           path: |
             DirtySlide.ipa
-            dist/**
+            dirtyslide/dist/**
