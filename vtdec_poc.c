@@ -204,16 +204,41 @@ static void build_idr(bw_t *b)
 /* ------------------------------------------------------------------ decode */
 static volatile int g_frame_count = 0;
 
-static void dec_cb(void *refcon, void *status_info, int64_t status_flags, void *source_frame_refcon,
-                   OSStatus result, VTDecodeInfoFlags info_flags, uint8_t *payload,
-                   size_t payload_size, uint64_t presentation_time, int64_t presentation_timestamp,
-                   CMTime presentation_duration, int64_t decode_finish_flags, VTFrameTiming *timings)
+/* VTDecompressionOutputCallback - 9 params (the SDK's real signature; an
+   11-param version with VTFrameTiming does not exist and will not compile). */
+static void dec_cb(void *decompressionOutputRefCon, void *sourceFrameRefCon, OSStatus status,
+                   VTDecodeInfoFlags infoFlags, CVImageBufferRef imageBuffer,
+                   CMTime presentationTimeStamp, CMTime presentationDuration,
+                   VTDecodeFrameFlags frameFlags, void *frameRefCon)
 {
-	(void)refcon; (void)status_info; (void)status_flags; (void)source_frame_refcon;
-	(void)info_flags; (void)payload; (void)payload_size; (void)presentation_time;
-	(void)presentation_timestamp; (void)presentation_duration; (void)decode_finish_flags; (void)timings;
+	(void)decompressionOutputRefCon; (void)sourceFrameRefCon; (void)infoFlags; (void)imageBuffer;
+	(void)presentationTimeStamp; (void)presentationDuration; (void)frameFlags; (void)frameRefCon;
 	g_frame_count++;
-	rlinef("decode callback: result=%d", (int)result);
+	rlinef("decode callback: status=%d", (int)status);
+}
+
+/* avcC record: the decoder configuration record that CMVideoFormatDescriptionCreate
+   wants for H.264 (SPS + PPS inside). */
+static int build_avcC(bw_t *sps, bw_t *pps, unsigned char *out, size_t outsz)
+{
+	size_t sl = bw_len(sps), pl = bw_len(pps);
+	size_t need = 7 + sl + pl;
+	if (need > outsz) return -1;
+	size_t o = 0;
+	out[o++] = 1;                      /* configurationVersion */
+	out[o++] = sps->buf[1];             /* AVCProfileIndication */
+	out[o++] = sps->buf[2];             /* profile_compatibility */
+	out[o++] = sps->buf[3];             /* AVCLevelIndication */
+	out[o++] = 0xFF;                   /* 6 bits reserved | lengthSizeMinusOne = 3 */
+	out[o++] = 0xE1;                   /* 3 bits reserved | numOfSequenceParameterSets = 1 */
+	out[o++] = (unsigned char)((sl >> 8) & 0xFF);
+	out[o++] = (unsigned char)(sl & 0xFF);
+	memcpy(out + o, sps->buf, sl); o += sl;
+	out[o++] = 1;                      /* numOfPictureParameterSets */
+	out[o++] = (unsigned char)((pl >> 8) & 0xFF);
+	out[o++] = (unsigned char)(pl & 0xFF);
+	memcpy(out + o, pps->buf, pl); o += pl;
+	return (int)o;
 }
 
 static int run_one(int mb_w, int mb_h, int mode)
@@ -226,36 +251,36 @@ static int run_one(int mb_w, int mb_h, int mode)
 	long long px_w = (long long)mb_w * 16;
 	long long px_h = (long long)mb_h * 16;
 	unsigned area32 = (unsigned)((unsigned long long)(px_w * px_h) & 0xFFFFFFFFull);
-	rlinef("== mbs %dx%d -> %lldx%lld px, 32-bit product = %u (0x%x) ==",
-	       mb_w, mb_h, px_w, px_h, area32, area32);
+	int area_signed = (int)area32;
+	rlinef("== mbs %dx%d -> %lldx%lld px, exact product %lld, 32-bit %u (signed %d) ==",
+	       mb_w, mb_h, px_w, px_h, px_w * px_h, area32, area_signed);
 
-	/* parameter sets for CMVideoFormatDescriptionCreateFromH264ParameterSets */
-	const uint8_t *sps_ptrs[1] = { sps.buf };
-	const uint8_t *pps_ptrs[1] = { pps.buf };
-	size_t sps_sizes[1] = { (size_t)bw_len(&sps) };
-	size_t pps_sizes[1] = { (size_t)bw_len(&pps) };
+	unsigned char avcc[1024];
+	int avccl = build_avcC(&sps, &pps, avcc, sizeof(avcc));
+	if (avccl < 0) {
+		rline("  avcC too big");
+		return 1;
+	}
+	rlinef("  avcC record = %d bytes", avccl);
 
+	/* legacy format description: codecType + avcC. Stable API, and the
+	   dimensions we pass are only a hint - the decoder reads the SPS. */
 	CMVideoFormatDescriptionRef fmt = NULL;
-	OSStatus st = CMVideoFormatDescriptionCreateFromH264ParameterSets(
-		NULL, 1, sps_ptrs, sps_sizes, 1, pps_ptrs, pps_sizes, 4, &fmt);
-	rlinef("  CMVideoFormatDescriptionCreateFromH264ParameterSets st=%d", (int)st);
+	OSStatus st = CMVideoFormatDescriptionCreate(kCFAllocatorDefault, kCMVideoCodecType_H264,
+	                                             (int)px_w, (int)px_h,
+	                                             avcc, (size_t)avccl, &fmt, NULL);
+	rlinef("  CMVideoFormatDescriptionCreate st=%d", (int)st);
 	if (st != noErr || !fmt) return 1;
 	{
-		CMVideoDimensions dim = { 0, 0 };
-		if (CMVideoFormatDescriptionGetDimensions(fmt, &dim) == noErr)
-			rlinef("  format description says %d x %d", dim.width, dim.height);
+		CMVideoDimensions dim = CMVideoFormatDescriptionGetDimensions(fmt);
+		rlinef("  format description says %d x %d", dim.width, dim.height);
 	}
 
 	VTDecompressionSessionRef sess = NULL;
 	NSMutableDictionary *spec = [NSMutableDictionary dictionary];
 	spec[(__bridge id)kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder] = @YES;
 	spec[(__bridge id)kVTVideoDecoderSpecification_RequireHardwareAcceleratedVideoDecoder] = @NO;
-	if (mode != 0) {
-		NSMutableDictionary *pd = [NSMutableDictionary dictionary];
-		pd[(__bridge id)kVTDecompressionPropertyKey_RealTime] = @YES;
-		(void)pd;
-	}
-	OSStatus dst = VTDecompressionSessionCreate(NULL, (__bridge CFDictionaryRef)fmt, NULL,
+	OSStatus dst = VTDecompressionSessionCreate(NULL, (__bridge CFDictionaryRef)fmt,
 	                                            (__bridge CFDictionaryRef)spec, dec_cb, NULL, &sess);
 	rlinef("  VTDecompressionSessionCreate st=%d (client-side gate)", (int)dst);
 	if (dst != noErr || !sess) {
@@ -263,16 +288,20 @@ static int run_one(int mb_w, int mb_h, int mode)
 		return 2;
 	}
 
-	/* build the sample: length-prefixed (avcC) NALs so the format description
-	   and the sample agree */
+	/* sample: 4-byte length prefix + the IDR NAL (avcC / length-prefixed mode) */
 	uint8_t slen[4] = { 0, 0, 0, 0 };
 	slen[3] = (uint8_t)bw_len(&idr);
 	size_t total = 4 + bw_len(&idr);
 	CMBlockBufferRef block = NULL;
-	if (CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, NULL, total, kCFAllocatorNull,
-	                                       NULL, 0, total, 0, &block) == noErr) {
-		CMBlockBufferReplaceDataBytes(slen, block, 0, 4);
-		CMBlockBufferReplaceDataBytes(idr.buf, block, 4, bw_len(&idr));
+	unsigned char *raw = (unsigned char *)malloc(total);
+	if (raw) {
+		memcpy(raw, slen, 4);
+		memcpy(raw + 4, idr.buf, bw_len(&idr));
+	}
+	if (raw && CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, raw, total, kCFAllocatorNull,
+	                                              NULL, 0, total, 0, &block) == noErr) {
+		/* CMBlockBufferCreateWithMemoryBlock does not copy; it takes ownership of
+		   the pointer, so do NOT free raw here. */
 	} else {
 		rline("  CMBlockBufferCreateWithMemoryBlock failed");
 	}
@@ -280,17 +309,17 @@ static int run_one(int mb_w, int mb_h, int mode)
 	CMSampleBufferRef sample = NULL;
 	if (block) {
 		size_t sz = CMBlockBufferGetDataLength(block);
-		CMSampleTimingInfo timing = { CMTimeMake(0, 600), CMTimeMake(1, 600), CMTimeInvalid, CMTimeInvalid,
+		CMSampleTimingInfo timing = { CMTimeMake(0, 600), CMTimeMake(1, 600), kCMTimeInvalid, kCMTimeInvalid,
 		                              1, 0, 0 };
-		OSStatus ss = CMSampleBufferCreateReady(kCFAllocatorDefault, sz, false, NULL,
-		                                        1, 1, &timing, 1, &sz, block, &sample);
+		OSStatus ss = CMSampleBufferCreateReady(sz, false, 1, 1, &timing, 1, &sz, block, &sample);
 		rlinef("  CMSampleBufferCreateReady st=%d size=%zu", (int)ss, sz);
 	}
 	if (sample) {
 		rline("  submitting the frame (this is where the kext allocates)");
-		OSStatus ds = VTDecompressionSessionDecodeFrame(sess, sample, NULL, NULL, NULL);
+		CMVideoFormatDescriptionRef outDesc = NULL;
+		OSStatus ds = VTDecompressionSessionDecodeFrame(sess, sample, &outDesc, 0, NULL);
 		rlinef("  VTDecompressionSessionDecodeFrame st=%d", (int)ds);
-		VTDecompressionSessionFinishDelayedFrames(sess, CMTimeMake(1, 600));
+		VTDecompressionSessionFinishDelayedFrames(sess);
 		CFRelease(sample);
 	} else {
 		rline("  no sample - session only");
@@ -306,8 +335,8 @@ int main(void)
 	@autoreleasepool {
 		report_open();
 		const char *list = getenv("VTD_LIST");
-		int mb_w = envi_default("VTD_W", 4095);
-		int mb_h = envi_default("VTD_H", 4095);
+		int mb_w = envi_default("VTD_W", 4096);
+		int mb_h = envi_default("VTD_H", 4096);
 		int mode = envi_default("VTD_MODE", 0);
 
 		if (list && *list) {
