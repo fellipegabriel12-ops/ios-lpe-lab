@@ -1,0 +1,10 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'dist3/Payload/VT3.app/VT3'
+relocations:
+  - { offsetInCU: 0x27, offset: 0x27, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x10000719C, symSize: 0x8EC }
+  - { offsetInCU: 0xCD, offset: 0xCD, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x10000719C, symSize: 0x8EC }
+  - { offsetInCU: 0x250, offset: 0x250, size: 0x8, addend: 0x0, symName: _envi, symObjAddr: 0x8EC, symBinAddr: 0x100007A88, symSize: 0x78 }
+  - { offsetInCU: 0x294, offset: 0x294, size: 0x8, addend: 0x0, symName: _logline, symObjAddr: 0x964, symBinAddr: 0x100007B00, symSize: 0x88 }
+  - { offsetInCU: 0x2D5, offset: 0x2D5, size: 0x8, addend: 0x0, symName: _enc_cb, symObjAddr: 0x9EC, symBinAddr: 0x100007B88, symSize: 0x48 }
+...
