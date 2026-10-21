@@ -54,11 +54,18 @@ jobs:
           codesign -dvvv "$APP/DirtySlide" 2>&1 | head -10 || true
       - name: commit artifacts
         run: |
+          set -e
           git config user.name "ci"
           git config user.email "ci@users.noreply.github.com"
-          git checkout -B build-dirtyslide
+          # ORPHAN branch on purpose: the GITHUB_TOKEN may not create/update files under
+          # .github/workflows, and GitHub rejects the whole push if the pushed history
+          # contains such a change ("refusing to allow a GitHub App to create or update
+          # workflow ... without workflows permission"). An orphan branch has exactly one
+          # commit holding only the artefacts -> no workflow file in the pushed range.
+          git checkout --orphan build-dirtyslide
+          git rm -r --cached . >/dev/null 2>&1 || true
           git add -f dirtyslide/dist dirtyslide/DirtySlide.ipa
-          git commit -m "build: DirtySlide.ipa" || true
+          git commit -m "build: DirtySlide.ipa"
           git push --force origin "HEAD:build-dirtyslide"
       - uses: actions/upload-artifact@v4
         with:
