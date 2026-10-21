@@ -1,0 +1,13 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'dist5/Payload/VT4.app/VT4'
+relocations:
+  - { offsetInCU: 0x27, offset: 0x27, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100006A60, symSize: 0xC64 }
+  - { offsetInCU: 0x4E, offset: 0x4E, size: 0x8, addend: 0x0, symName: _g_report, symObjAddr: 0x56F0, symBinAddr: 0x10000C080, symSize: 0x0 }
+  - { offsetInCU: 0x34D, offset: 0x34D, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100006A60, symSize: 0xC64 }
+  - { offsetInCU: 0x546, offset: 0x546, size: 0x8, addend: 0x0, symName: _report_open, symObjAddr: 0xC64, symBinAddr: 0x1000076C4, symSize: 0x124 }
+  - { offsetInCU: 0x586, offset: 0x586, size: 0x8, addend: 0x0, symName: _envi, symObjAddr: 0xD88, symBinAddr: 0x1000077E8, symSize: 0x78 }
+  - { offsetInCU: 0x5CA, offset: 0x5CA, size: 0x8, addend: 0x0, symName: _logline, symObjAddr: 0xE00, symBinAddr: 0x100007860, symSize: 0xA8 }
+  - { offsetInCU: 0x60B, offset: 0x60B, size: 0x8, addend: 0x0, symName: _enc_cb, symObjAddr: 0xEA8, symBinAddr: 0x100007908, symSize: 0x48 }
+  - { offsetInCU: 0x667, offset: 0x667, size: 0x8, addend: 0x0, symName: _report_line, symObjAddr: 0xEF0, symBinAddr: 0x100007950, symSize: 0x6C }
+...
