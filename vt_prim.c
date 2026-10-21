@@ -39,6 +39,42 @@ static int envi(const char *k, int dflt)
 	return (v && *v) ? atoi(v) : dflt;
 }
 
+/*
+ * O-C (session "jailbreak 3"): stdout is not readable on this rig.
+ *   - NSLog() bodies are redacted by the unified log for non-privileged apps
+ *     ("[vt] <private>" in `ios syslog`).
+ *   - the DVT outputReceived: stream is not advertised over the userspace
+ *     tunnel, so `pymobiledevice3 developer dvt launch --stream` dies with
+ *     InvalidService.
+ * So the harness now ALSO writes every line to a file inside its own container
+ * (Documents/vt4_report.txt), which lockdown CAN read: `ios file pull`.
+ */
+static FILE *g_report = NULL;
+
+static void report_open(void)
+{
+	NSString *home = NSHomeDirectory();
+	if (!home) return;
+	NSString *dir = [home stringByAppendingPathComponent:@"Documents"];
+	[[NSFileManager defaultManager] createDirectoryAtPath:dir
+	                          withIntermediateDirectories:YES
+	                                           attributes:nil
+	                                                error:nil];
+	NSString *path = [dir stringByAppendingPathComponent:@"vt4_report.txt"];
+	g_report = fopen([path UTF8String], "a");
+	if (g_report) {
+		fprintf(g_report, "=== run %s ===\n", [[[NSDate date] description] UTF8String]);
+		fflush(g_report);
+	}
+}
+
+static void report_line(const char *s)
+{
+	if (!g_report) return;
+	fprintf(g_report, "%s\n", s);
+	fflush(g_report);
+}
+
 static void logline(const char *fmt, ...)
 {
 	va_list ap;
@@ -49,7 +85,8 @@ static void logline(const char *fmt, ...)
 	fputs(buf, stdout);
 	fputc('\n', stdout);
 	fflush(stdout);
-	NSLog(@"[vt] %s", buf);
+	report_line(buf);
+	NSLog(@"[vt] %{public}s", buf);
 }
 
 static void enc_cb(void *refcon, void *src, OSStatus status, VTEncodeInfoFlags flags, CMSampleBufferRef sbuf)
@@ -61,6 +98,7 @@ static void enc_cb(void *refcon, void *src, OSStatus status, VTEncodeInfoFlags f
 int main(void)
 {
 	@autoreleasepool {
+		report_open();
 		int w = envi("VT_W", 4096);
 		int h = envi("VT_H", 2160);
 		int refs = envi("VT_REFS", 64);
@@ -181,6 +219,12 @@ int main(void)
 		logline(@"done");
 		VTCompressionSessionInvalidate(sess);
 		CFRelease(sess);
+	}
+	logline(@"REPORT_DONE");
+	if (g_report) {
+		fflush(g_report);
+		fclose(g_report);
+		g_report = NULL;
 	}
 	return 0;
 }
