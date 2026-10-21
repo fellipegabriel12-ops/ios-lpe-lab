@@ -265,3 +265,37 @@ cd dist5
 zip -q -r -X VTDEC.ipa Payload/VTDEC.app
 cd ..
 echo "[+] built dist5/VTDEC.ipa"
+
+# ---- full-resolution ImageIO decode harness (CGDEC) -----------------------------
+# The CGPOC harness only asks for a THUMBNAIL, and the thumbnail path may decode at
+# a reduced scale, so it would never make the codec allocate the real (wrapped)
+# buffer. CGDEC asks for the FULL image, which is the path that drives the real
+# frame allocation in AppleAVE2.
+APP11="dist5/Payload/CGDEC.app"
+mkdir -p "$APP11"
+$CC -x objective-c -O0 -g -o "$APP11/CGDEC" cg_decode.c \
+    -framework Foundation -framework CoreGraphics -framework ImageIO
+cat > "$APP11/Info.plist" <<PLIST11
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key><string>CGDEC</string>
+  <key>CFBundleIdentifier</key><string>com.lab.lpe</string>
+  <key>CFBundleName</key><string>CGDEC</string>
+  <key>CFBundleVersion</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>LSRequiresIPhoneOS</key><true/>
+  <key>MinimumOSVersion</key><string>16.0</string>
+  <key>UIDeviceFamily</key><array><integer>1</integer></array>
+  <key>UILaunchScreen</key><dict/>
+</dict>
+</plist>
+PLIST11
+codesign -s - --force "$APP11/CGDEC" 2>/dev/null || true
+rm -f dist5/CGDEC.ipa
+cd dist5
+zip -q -r -X CGDEC.ipa Payload/CGDEC.app
+cd ..
+echo "[+] built dist5/CGDEC.ipa"
