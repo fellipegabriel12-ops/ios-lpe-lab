@@ -21,7 +21,12 @@
 #import <CoreVideo/CoreVideo.h>
 #import <CoreMedia/CoreMedia.h>
 #import <VideoToolbox/VTCompressionSession.h>
+#if __has_include(<VideoToolbox/VTProperties.h>)
 #import <VideoToolbox/VTProperties.h>
+#else
+// VTProperties.h is not shipped in every iPhoneOS SDK; the umbrella header is.
+#import <VideoToolbox/VideoToolbox.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>

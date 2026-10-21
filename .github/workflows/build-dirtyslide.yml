@@ -25,7 +25,12 @@ jobs:
             CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
             DEVELOPMENT_TEAM="" PRODUCT_BUNDLE_IDENTIFIER=com.lab.dirtyslide \
             ARCHS=arm64e ONLY_ACTIVE_ARCH=NO build
-          APP=$(find "$PWD/build/Build/Products" -maxdepth 2 -name "*.app" -type d | head -1)
+          # xcodebuild put the products in $SRCROOT/build/Release-iphoneos (the project sets
+          # CONFIGURATION_BUILD_DIR itself); there is no build/Build/Products tree without a scheme.
+          APP=$(find "$PWD/build" -maxdepth 4 -name "DirtySlide.app" -type d 2>/dev/null | head -1)
+          if [ -z "$APP" ]; then
+            echo "##[error]no DirtySlide.app under $PWD/build"; find "$PWD/build" -maxdepth 3 -type d | head -60; exit 1
+          fi
           echo "APP=$APP"
           ls -la "$APP"
           rm -rf dist && mkdir -p dist/Payload
@@ -38,9 +43,11 @@ jobs:
         run: |
           set -e
           xcodebuild -version
-          APP=$(find "$PWD/build/Build/Products" -maxdepth 2 -name "*.app" -type d | head -1)
+          APP=$(find "$PWD/build" -maxdepth 4 -name "DirtySlide.app" -type d 2>/dev/null | head -1)
+          echo "APP=$APP"
           file "$APP/DirtySlide" || true
           otool -L "$APP/DirtySlide" 2>/dev/null | head -20 || true
+          codesign -dvvv "$APP/DirtySlide" 2>&1 | head -10 || true
       - name: commit artifacts
         run: |
           git config user.name "ci"
