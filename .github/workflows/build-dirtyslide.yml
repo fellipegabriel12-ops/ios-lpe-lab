@@ -57,12 +57,12 @@ jobs:
           git config user.name "ci"
           git config user.email "ci@users.noreply.github.com"
           git checkout -B build-dirtyslide
-          git add -f dirtyslide/dist DirtySlide.ipa
+          git add -f dirtyslide/dist dirtyslide/DirtySlide.ipa
           git commit -m "build: DirtySlide.ipa" || true
           git push --force origin "HEAD:build-dirtyslide"
       - uses: actions/upload-artifact@v4
         with:
           name: dirtyslide-ios
           path: |
-            DirtySlide.ipa
+            dirtyslide/DirtySlide.ipa
             dirtyslide/dist/**
