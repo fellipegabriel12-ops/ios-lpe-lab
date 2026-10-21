@@ -266,9 +266,9 @@ static int run_one(int mb_w, int mb_h, int mode)
 	/* legacy format description: codecType + avcC. Stable API, and the
 	   dimensions we pass are only a hint - the decoder reads the SPS. */
 	CMVideoFormatDescriptionRef fmt = NULL;
-	OSStatus st = CMVideoFormatDescriptionCreate(kCFAllocatorDefault, kCMVideoCodecType_H264,
+	OSStatus st = CMVideoFormatDescriptionCreate(kCMVideoCodecType_H264,
 	                                             (int)px_w, (int)px_h,
-	                                             avcc, (size_t)avccl, &fmt, NULL);
+	                                             avcc, (size_t)avccl, &fmt);
 	rlinef("  CMVideoFormatDescriptionCreate st=%d", (int)st);
 	if (st != noErr || !fmt) return 1;
 	{
@@ -292,27 +292,20 @@ static int run_one(int mb_w, int mb_h, int mode)
 	uint8_t slen[4] = { 0, 0, 0, 0 };
 	slen[3] = (uint8_t)bw_len(&idr);
 	size_t total = 4 + bw_len(&idr);
-	CMBlockBufferRef block = NULL;
 	unsigned char *raw = (unsigned char *)malloc(total);
 	if (raw) {
 		memcpy(raw, slen, 4);
 		memcpy(raw + 4, idr.buf, bw_len(&idr));
 	}
-	if (raw && CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, raw, total, kCFAllocatorNull,
-	                                              NULL, 0, total, 0, &block) == noErr) {
-		/* CMBlockBufferCreateWithMemoryBlock does not copy; it takes ownership of
-		   the pointer, so do NOT free raw here. */
-	} else {
-		rline("  CMBlockBufferCreateWithMemoryBlock failed");
-	}
 
 	CMSampleBufferRef sample = NULL;
-	if (block) {
-		size_t sz = CMBlockBufferGetDataLength(block);
+	if (raw) {
 		CMSampleTimingInfo timing = { CMTimeMake(0, 600), CMTimeMake(1, 600), kCMTimeInvalid, kCMTimeInvalid,
 		                              1, 0, 0 };
-		OSStatus ss = CMSampleBufferCreateReady(sz, false, 1, 1, &timing, 1, &sz, block, &sample);
-		rlinef("  CMSampleBufferCreateReady st=%d size=%zu", (int)ss, sz);
+		size_t ssize = total;
+		OSStatus ss = CMSampleBufferCreate(kCFAllocatorDefault, total, false,
+		                                   raw, total, 1, 1, &timing, 1, &ssize, &sample);
+		rlinef("  CMSampleBufferCreate st=%d size=%zu", (int)ss, total);
 	}
 	if (sample) {
 		rline("  submitting the frame (this is where the kext allocates)");

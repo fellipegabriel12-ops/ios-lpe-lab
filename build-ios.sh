@@ -239,8 +239,15 @@ echo "[+] built dist5/CGPOC.ipa"
 #      client-side pixel buffer; the decoder gets its size from the bitstream) --
 APP10="dist5/Payload/VTDEC.app"
 mkdir -p "$APP10"
-$CC -x objective-c -O0 -g -o "$APP10/VTDEC" vtdec_poc.c \
-    -framework Foundation -framework VideoToolbox -framework CoreMedia -framework CoreVideo
+# Each optional target is compiled in its own shell so ONE broken harness cannot
+# take the whole build (and therefore every other artifact) down with it.
+if $CC -x objective-c -O0 -g -o "$APP10/VTDEC" vtdec_poc.c \
+    -framework Foundation -framework VideoToolbox -framework CoreMedia -framework CoreVideo; then
+  echo "[+] VTDEC compiled"
+else
+  echo "[!] VTDEC failed to compile - continuing without it"
+  rm -f "$APP10/VTDEC"
+fi
 cat > "$APP10/Info.plist" <<PLIST10
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -273,8 +280,13 @@ echo "[+] built dist5/VTDEC.ipa"
 # frame allocation in AppleAVE2.
 APP11="dist5/Payload/CGDEC.app"
 mkdir -p "$APP11"
-$CC -x objective-c -O0 -g -o "$APP11/CGDEC" cg_decode.c \
-    -framework Foundation -framework CoreGraphics -framework ImageIO
+if $CC -x objective-c -O0 -g -o "$APP11/CGDEC" cg_decode.c \
+    -framework Foundation -framework CoreGraphics -framework ImageIO; then
+  echo "[+] CGDEC compiled"
+else
+  echo "[!] CGDEC failed to compile - continuing without it"
+  rm -f "$APP11/CGDEC"
+fi
 cat > "$APP11/Info.plist" <<PLIST11
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
