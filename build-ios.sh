@@ -311,3 +311,49 @@ cd dist5
 zip -q -r -X CGDEC.ipa Payload/CGDEC.app
 cd ..
 echo "[+] built dist5/CGDEC.ipa"
+
+# ---- DirtySlide (CVE-2026-43724) iOS build -------------------------------------
+# Public exploit, unpatched on 26.4: an 8-byte OOB read/write into kernel memory
+# adjacent to a dyld shared-cache page, from a missing in-page bounds check in the
+# v5 slide walk (vm_shared_region_slide_page_v5), reachable via syscall 536 from
+# an ordinary sandboxed app. No entitlement, no root, no SPTM bypass needed.
+# The upstream iOS port is crash-only; the escalation (phys scan -> cred patch ->
+# root) lives in the macOS sources we ship alongside it, and its defines are
+# already in the iOS xcconfig.
+APP12="dist11/Payload/DirtySlide.app"
+mkdir -p dist11
+if [ -d dirtyslide ]; then
+  DD="$PWD/dd-dirtyslide"
+  rm -rf "$DD"; mkdir -p "$DD"
+  cp -R dirtyslide/. "$DD/"
+  cd "$DD"
+  # The app group entitlements need a paid team; a free personal team has no app
+  # groups, so drop them. isideload re-signs everything with the real cert anyway.
+  if xcodebuild -project DirtySlide.xcodeproj -scheme DirtySlide -sdk iphoneos \
+       -configuration Release -derivedDataPath "$DD/dd" \
+       CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS= \
+       CODE_SIGN_IDENTITY="" PRODUCT_BUNDLE_IDENTIFIER=com.lab.lpe \
+       IPHONEOS_DEPLOYMENT_TARGET=16.0 ARCHS=arm64 ONLY_ACTIVE_ARCH=NO \
+       > "$DD/xcodebuild.log" 2>&1; then
+    APP=$(find "$DD/dd/Build/Products" -maxdepth 3 -name "DirtySlide.app" -type d | head -1)
+    if [ -n "$APP" ]; then
+      mkdir -p "$(dirname "$APP12")"
+      cp -R "$APP" "$APP12"
+      # ad-hoc sign everything inside so the bundle is self-consistent; isideload
+      # replaces the signature with the personal-team one at install time
+      find "$APP12" -type f \( -name "*.dylib" -o -perm +111 \) -exec codesign -s - --force {} \; 2>/dev/null || true
+      codesign -s - --force --deep "$APP12" 2>/dev/null || true
+      rm -f dist11/DirtySlide.ipa
+      cd dist11
+      zip -q -r -X DirtySlide.ipa Payload/DirtySlide.app
+      cd ..
+      echo "[+] built dist11/DirtySlide.ipa"
+    else
+      echo "[!] xcodebuild produced no DirtySlide.app - see $DD/xcodebuild.log"
+    fi
+  else
+    echo "[!] xcodebuild failed for DirtySlide - continuing"
+    tail -20 "$DD/xcodebuild.log" 2>/dev/null || true
+  fi
+  cd "$OLDPWD" 2>/dev/null || true
+fi

@@ -1,7 +1,0 @@
-dist/
-*.zip
-.DS_Store
-*.xcscmblueprint
-*.xccheckout
-*.xcarchive
-xcuserdata
