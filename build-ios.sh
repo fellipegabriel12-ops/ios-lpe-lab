@@ -198,3 +198,39 @@ cd ..
 echo "[+] built dist/LPE.ipa"
 ls -la dist/LPE.ipa dist/Payload/LPE.app/
 file dist/Payload/LPE.app/LPE dist/Payload/LPE.app/libchild.dylib
+
+# ---- CVE-2026-86950 CoreGraphics PoC harness ("the great glyph grift") ----------
+# Landed in dist5 alongside VT4 so the existing workflow's artifact commit
+# (`git add -f dist dist2 dist3 dist4 dist5`) picks it up with NO change to
+# .github/workflows (the GitHub App token cannot push workflow files).
+# The trigger.pdf/trigger.ttf are the upstream califio PoC inputs.
+APP9="dist5/Payload/CGPOC.app"
+mkdir -p "$APP9"
+$CC -x objective-c -O0 -g -o "$APP9/CGPOC" cg_poc.c \
+    -framework Foundation -framework CoreGraphics -framework ImageIO
+cp -f trigger.pdf "$APP9/trigger.pdf"
+cp -f trigger.ttf "$APP9/trigger.ttf"
+cat > "$APP9/Info.plist" <<PLIST9
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key><string>CGPOC</string>
+  <key>CFBundleIdentifier</key><string>com.lab.lpe</string>
+  <key>CFBundleName</key><string>CGPOC</string>
+  <key>CFBundleVersion</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>LSRequiresIPhoneOS</key><true/>
+  <key>MinimumOSVersion</key><string>16.0</string>
+  <key>UIDeviceFamily</key><array><integer>1</integer></array>
+  <key>UILaunchScreen</key><dict/>
+</dict>
+</plist>
+PLIST9
+codesign -s - --force "$APP9/CGPOC" 2>/dev/null || true
+rm -f dist5/CGPOC.ipa
+cd dist5
+zip -q -r -X CGPOC.ipa Payload/CGPOC.app
+cd ..
+echo "[+] built dist5/CGPOC.ipa"
