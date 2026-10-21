@@ -49,7 +49,7 @@ static void logline(const char *fmt, ...)
 	fputs(buf, stdout);
 	fputc('\n', stdout);
 	fflush(stdout);
-	NSLog(@"[vt] %s", @(buf));
+	NSLog(@"[vt] %s", buf);
 }
 
 static void enc_cb(void *refcon, void *src, OSStatus status, VTEncodeInfoFlags flags, CMSampleBufferRef sbuf)
@@ -100,7 +100,7 @@ int main(void)
 			if (st == noErr && probe) {
 				CFTypeRef got = NULL;
 				OSStatus gs = VTSessionCopyProperty(probe, kVTCompressionPropertyKey_ReferenceBufferCount,
-					kCFAllocatorDefault, &got);
+					NULL, &got);
 				logline(@"read-back ReferenceBufferCount: st=%d value=%s", (int)gs,
 					(gs == noErr && got) ? [[(NSNumber *)got description] UTF8String] : "(n/a)");
 				if (got) CFRelease(got);
@@ -122,7 +122,7 @@ int main(void)
 		if (CVPixelBufferCreate(NULL, w, h,
 		        depth == 10 ? kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange
 		                    : kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
-		        (__bridge CFDictionaryRef)pa, NULL, &pb) != kCVReturnSuccess || !pb) {
+		        (__bridge CFDictionaryRef)pa, &pb) != kCVReturnSuccess || !pb) {
 			logline(@"pixelbuffer %dx%d failed", w, h);
 			return 1;
 		}
@@ -146,7 +146,9 @@ int main(void)
 		props[(__bridge id)kVTCompressionPropertyKey_MaxKeyFrameInterval] = @(1);
 		props[(__bridge id)kVTCompressionPropertyKey_ReferenceBufferCount] = @(refs);
 		props[(__bridge id)kVTCompressionPropertyKey_MaxFrameDelayCount] = @(refs);
-		props[@"SuggestedLookAheadFrameCount"] = @(refs);
+		/* SuggestedLookAheadFrameCount is not in the iPhoneOS 17.5 SDK; unknown keys inside the
+		   CREATE dict can fail session creation, so it goes in AFTER create as a logged
+		   set-property - a rejection costs one log line, not the whole test. */
 		if (depth == 10) {
 			props[(__bridge id)kVTCompressionPropertyKey_OutputBitDepth] = @10;
 		}
@@ -163,10 +165,14 @@ int main(void)
 		if (st != noErr || !sess) {
 			return 2;
 		}
+		{
+			OSStatus ls = VTSessionSetProperty(sess, CFSTR("SuggestedLookAheadFrameCount"), @(refs));
+			logline(@"set SuggestedLookAheadFrameCount=%d -> st=%d (nonfatal)", refs, (int)ls);
+		}
 		for (int i = 0; i < frames; i++) {
 			CMTime pts = CMTimeMake(i, 30);
 			CMTime dur = CMTimeMake(1, 30);
-			st = VTCompressionSessionEncodeFrame(sess, pb, pts, dur, NULL, NULL);
+			st = VTCompressionSessionEncodeFrame(sess, pb, pts, dur, NULL, NULL, NULL);
 			logline(@"submit frame %d -> %d", i, (int)st);
 			if (st != noErr) break;
 			if (slow) usleep(slow);
