@@ -38,8 +38,8 @@ echo "#define TRIGGER_OFFSET $TRIG_OFF" > trig_off.h
 echo "[*] child_probe @ 0x$PROBE_ADDR, __TEXT 0x$TEXT_VMADDR => PROBE_OFFSET=$OFF"
 echo "[*] child_trigger @ 0x$TRIG_ADDR => TRIGGER_OFFSET=$TRIG_OFF"
 
-echo "[*] building host..."
-$CC -I. -o "$APP/LPE" host_probe.c
+echo "[*] building host (full RIE runner: probe/trigger/allinject via RIE_MODE)..."
+$CC -I. -o "$APP/LPE" host_ios.c
 
 cat > "$APP/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
