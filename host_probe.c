@@ -33,7 +33,12 @@
 #include <mach-o/dyld.h>
 
 #ifndef _POSIX_SPAWN_RESLIDE
-#define _POSIX_SPAWN_RESLIDE 0x0080
+/* xnu-12377.1.9 bsd/sys/spawn.h (iOS 26.4 kernel source):
+ *   POSIX_SPAWN_START_SUSPENDED = 0x0080, _POSIX_SPAWN_RESLIDE = 0x0800.
+ * The old 0x0080 define made this OR a no-op (just START_SUSPENDED) - the
+ * reslide flag was never actually set. CONFIG_RESLIDE_SHARED_CACHE is on in
+ * config/MASTER.arm64.iPhoneOS, so 0x0800 is the real first-mapper flag. */
+#define _POSIX_SPAWN_RESLIDE 0x0800
 #endif
 #ifndef vm_task_t
 typedef mach_port_t vm_task_t;

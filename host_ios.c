@@ -35,7 +35,11 @@
 #include <mach-o/dyld.h>
 
 #ifndef _POSIX_SPAWN_RESLIDE
-#define _POSIX_SPAWN_RESLIDE 0x0080
+/* xnu-12377.1.9 bsd/sys/spawn.h: POSIX_SPAWN_START_SUSPENDED = 0x0080,
+ * _POSIX_SPAWN_RESLIDE = 0x0800. The old define here was 0x0080 which made
+ * the OR a no-op (just START_SUSPENDED) - the child was never a first mapper.
+ * CONFIG_RESLIDE_SHARED_CACHE is on in config/MASTER.arm64.iPhoneOS. */
+#define _POSIX_SPAWN_RESLIDE 0x0800
 #endif
 
 /* --- mach_vm API: the iOS SDK ships the vm types (<mach/vm_types.h>) but not
