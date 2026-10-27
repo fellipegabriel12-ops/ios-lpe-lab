@@ -204,15 +204,13 @@ static void build_idr(bw_t *b)
 /* ------------------------------------------------------------------ decode */
 static volatile int g_frame_count = 0;
 
-/* VTDecompressionOutputCallback - 9 params (the SDK's real signature; an
-   11-param version with VTFrameTiming does not exist and will not compile). */
+/* VTDecompressionOutputCallback - iOS 7-param signature */
 static void dec_cb(void *decompressionOutputRefCon, void *sourceFrameRefCon, OSStatus status,
                    VTDecodeInfoFlags infoFlags, CVImageBufferRef imageBuffer,
-                   CMTime presentationTimeStamp, CMTime presentationDuration,
-                   VTDecodeFrameFlags frameFlags, void *frameRefCon)
+                   CMTime presentationTimeStamp, CMTime presentationDuration)
 {
 	(void)decompressionOutputRefCon; (void)sourceFrameRefCon; (void)infoFlags; (void)imageBuffer;
-	(void)presentationTimeStamp; (void)presentationDuration; (void)frameFlags; (void)frameRefCon;
+	(void)presentationTimeStamp; (void)presentationDuration;
 	g_frame_count++;
 	rlinef("decode callback: status=%d", (int)status);
 }
@@ -263,13 +261,14 @@ static int run_one(int mb_w, int mb_h, int mode)
 	}
 	rlinef("  avcC record = %d bytes", avccl);
 
-	/* legacy format description: codecType + avcC. Stable API, and the
-	   dimensions we pass are only a hint - the decoder reads the SPS. */
+	/* format description straight from the parameter sets - the SPS carries the
+	   real dimensions; the wrapper's w/h are only a hint. */
+	const uint8_t *ps[2] = { sps.buf, pps.buf };
+	size_t psz[2] = { (size_t)bw_len(&sps), (size_t)bw_len(&pps) };
 	CMVideoFormatDescriptionRef fmt = NULL;
-	OSStatus st = CMVideoFormatDescriptionCreate(kCMVideoCodecType_H264,
-	                                             (int)px_w, (int)px_h,
-	                                             avcc, (size_t)avccl, &fmt);
-	rlinef("  CMVideoFormatDescriptionCreate st=%d", (int)st);
+	OSStatus st = CMVideoFormatDescriptionCreateFromH264ParameterSets(
+	    kCFAllocatorDefault, 4, ps, psz, 2, &fmt);
+	rlinef("  CMVideoFormatDescriptionCreateFromH264ParameterSets st=%d", (int)st);
 	if (st != noErr || !fmt) return 1;
 	{
 		CMVideoDimensions dim = CMVideoFormatDescriptionGetDimensions(fmt);
@@ -277,11 +276,11 @@ static int run_one(int mb_w, int mb_h, int mode)
 	}
 
 	VTDecompressionSessionRef sess = NULL;
-	NSMutableDictionary *spec = [NSMutableDictionary dictionary];
-	spec[(__bridge id)kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder] = @YES;
-	spec[(__bridge id)kVTVideoDecoderSpecification_RequireHardwareAcceleratedVideoDecoder] = @NO;
-	OSStatus dst = VTDecompressionSessionCreate(NULL, (__bridge CFDictionaryRef)fmt,
-	                                            (__bridge CFDictionaryRef)spec, dec_cb, NULL, &sess);
+	VTDecompressionOutputCallbackRecord rec;
+	rec.decompressionOutputCallback = dec_cb;
+	rec.decompressionOutputRefCon = NULL;
+	OSStatus dst = VTDecompressionSessionCreate(kCFAllocatorDefault, fmt, NULL, NULL,
+	                                            &rec, &sess);
 	rlinef("  VTDecompressionSessionCreate st=%d (client-side gate)", (int)dst);
 	if (dst != noErr || !sess) {
 		CFRelease(fmt);
@@ -298,25 +297,36 @@ static int run_one(int mb_w, int mb_h, int mode)
 		memcpy(raw + 4, idr.buf, bw_len(&idr));
 	}
 
+	CMBlockBufferRef bb = NULL;
 	CMSampleBufferRef sample = NULL;
 	if (raw) {
-		CMSampleTimingInfo timing = { CMTimeMake(0, 600), CMTimeMake(1, 600), kCMTimeInvalid, kCMTimeInvalid,
-		                              1, 0, 0 };
-		size_t ssize = total;
-		OSStatus ss = CMSampleBufferCreate(kCFAllocatorDefault, total, false,
-		                                   raw, total, 1, 1, &timing, 1, &ssize, &sample);
-		rlinef("  CMSampleBufferCreate st=%d size=%zu", (int)ss, total);
+		OSStatus bs = CMBlockBufferCreateWithMemoryBlock(
+		    kCFAllocatorDefault, raw, total, kCFAllocatorDefault, NULL, 0, total, 0, &bb);
+		rlinef("  CMBlockBufferCreateWithMemoryBlock st=%d size=%zu", (int)bs, total);
+		if (bs == noErr && bb) {
+			CMSampleTimingInfo timing;
+			timing.duration = CMTimeMake(1, 600);
+			timing.presentationTimeStamp = CMTimeMake(0, 600);
+			timing.decodeTimeStamp = kCMTimeInvalid;
+			CMItemCount ssize = (CMItemCount)total;
+			OSStatus ss = CMSampleBufferCreateReady(kCFAllocatorDefault, bb, fmt,
+			                                        1, 1, &timing, &ssize, &sample);
+			rlinef("  CMSampleBufferCreateReady st=%d size=%zu", (int)ss, total);
+		}
 	}
 	if (sample) {
 		rline("  submitting the frame (this is where the kext allocates)");
-		CMVideoFormatDescriptionRef outDesc = NULL;
-		OSStatus ds = VTDecompressionSessionDecodeFrame(sess, sample, &outDesc, 0, NULL);
-		rlinef("  VTDecompressionSessionDecodeFrame st=%d", (int)ds);
+		VTDecompressionOutputRecord orec;
+		memset(&orec, 0, sizeof(orec));
+		OSStatus ds = VTDecompressionSessionDecodeFrame(sess, sample, 0, NULL, &orec);
+		rlinef("  VTDecompressionSessionDecodeFrame st=%d (kext verdict)", (int)ds);
 		VTDecompressionSessionFinishDelayedFrames(sess);
 		CFRelease(sample);
 	} else {
 		rline("  no sample - session only");
 	}
+	if (bb) CFRelease(bb);
+	if (raw) free(raw);
 	VTDecompressionSessionInvalidate(sess);
 	CFRelease(sess);
 	CFRelease(fmt);
