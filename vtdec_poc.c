@@ -309,16 +309,22 @@ static int run_one(int mb_w, int mb_h, int mode)
 			timing.presentationTimeStamp = CMTimeMake(0, 600);
 			timing.decodeTimeStamp = kCMTimeInvalid;
 			CMItemCount ssize = (CMItemCount)total;
+			size_t ssize_sz = total;
 			OSStatus ss = CMSampleBufferCreateReady(kCFAllocatorDefault, bb, fmt,
-			                                        1, 1, &timing, &ssize, &sample);
+			                                        1, 1, &timing, 1, &ssize_sz, &sample);
 			rlinef("  CMSampleBufferCreateReady st=%d size=%zu", (int)ss, total);
 		}
 	}
 	if (sample) {
 		rline("  submitting the frame (this is where the kext allocates)");
-		VTDecompressionOutputRecord orec;
-		memset(&orec, 0, sizeof(orec));
-		OSStatus ds = VTDecompressionSessionDecodeFrame(sess, sample, 0, NULL, &orec);
+		VTDecodeInfoFlags iflags = 0;
+		OSStatus ds = VTDecompressionSessionDecodeFrame(sess, sample,
+		    ^(OSStatus status, VTDecodeInfoFlags info, CVImageBufferRef img,
+		      CMTime pts, CMTime dur) {
+		        (void)info; (void)img; (void)pts; (void)dur;
+		        g_frame_count++;
+		        rlinef("decode block: status=%d", (int)status);
+		    }, NULL, &iflags);
 		rlinef("  VTDecompressionSessionDecodeFrame st=%d (kext verdict)", (int)ds);
 		VTDecompressionSessionFinishDelayedFrames(sess);
 		CFRelease(sample);
