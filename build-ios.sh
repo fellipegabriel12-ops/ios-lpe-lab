@@ -357,3 +357,44 @@ if [ -d dirtyslide ]; then
   fi
   cd "$OLDPWD" 2>/dev/null || true
 fi
+
+# ---- CGDECPURE (O-D startup-bug experiment) --------------------------------------
+# CGDEC trapped 4/4 on 2026-10-27 at ~22 ms (PAC data-auth failure in object_getClass
+# via the ObjC path-building calls, main:70) BEFORE any payload decode. This variant
+# is the same harness in PURE C (no Foundation, no objc dispatch): paths from getenv,
+# stat()/open()/read()/write() instead of NSFileManager, identical CF/CG decode calls.
+# Read-out: survives = the ObjC-dispatch path under DVT launch is the bug (all harnesses
+# go pure-C for path/report work); also traps = the launch environment itself, O-B owns.
+APP13="dist5/Payload/CGDECPURE.app"
+mkdir -p "$APP13"
+if $CC -O0 -g -o "$APP13/CGDECPURE" cg_decode_pure.c \
+    -framework CoreGraphics -framework ImageIO -framework CoreFoundation; then
+  echo "[+] CGDECPURE compiled (pure C, no Foundation)"
+else
+  echo "[!] CGDECPURE failed to compile - continuing without it"
+  rm -f "$APP13/CGDECPURE"
+fi
+cat > "$APP13/Info.plist" <<PLIST13
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key><string>CGDECPURE</string>
+  <key>CFBundleIdentifier</key><string>com.lab.lpe</string>
+  <key>CFBundleName</key><string>CGDECPURE</string>
+  <key>CFBundleVersion</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>LSRequiresIPhoneOS</key><true/>
+  <key>MinimumOSVersion</key><string>16.0</string>
+  <key>UIDeviceFamily</key><array><integer>1</integer></array>
+  <key>UILaunchScreen</key><dict/>
+</dict>
+</plist>
+PLIST13
+codesign -s - --force "$APP13/CGDECPURE" 2>/dev/null || true
+rm -f dist5/CGDECPURE.ipa
+cd dist5
+zip -q -r -X CGDECPURE.ipa Payload/CGDECPURE.app
+cd ..
+echo "[+] built dist5/CGDECPURE.ipa"
