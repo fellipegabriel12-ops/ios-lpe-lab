@@ -277,6 +277,23 @@ static int run_one(int mb_w, int mb_h, int mode)
 	   real dimensions; the wrapper's w/h are only a hint. */
 	const uint8_t *ps[2] = { avc_sps->buf, pps.buf };
 	size_t psz[2] = { (size_t)bw_len(avc_sps), (size_t)bw_len(&pps) };
+	/* hex-dump the exact bytes we hand to Apple - the -12712 needs ground truth */
+	{
+		rlinef("  PS[0] len=%zu bytes:", psz[0]);
+		size_t dn = psz[0] < 24 ? psz[0] : 24;
+		char hx[128]; size_t ho = 0;
+		for (size_t i = 0; i < dn && ho < sizeof(hx) - 3; i++)
+			ho += (size_t)snprintf(hx + ho, sizeof(hx) - ho, "%02x", avc_sps->buf[i]);
+		hx[ho] = 0;
+		rlinef("    %s", hx);
+		rlinef("  PS[1] len=%zu bytes:", psz[1]);
+		dn = psz[1] < 24 ? psz[1] : 24;
+		ho = 0;
+		for (size_t i = 0; i < dn && ho < sizeof(hx) - 3; i++)
+			ho += (size_t)snprintf(hx + ho, sizeof(hx) - ho, "%02x", pps.buf[i]);
+		hx[ho] = 0;
+		rlinef("    %s", hx);
+	}
 	CMVideoFormatDescriptionRef fmt = NULL;
 	OSStatus st = CMVideoFormatDescriptionCreateFromH264ParameterSets(
 	    kCFAllocatorDefault, 4, ps, psz, 2, &fmt);
