@@ -370,7 +370,6 @@ static int run_one(int mb_w, int mb_h, int mode)
 
 int main(void)
 {
-	@autoreleasepool {
 		report_open();
 		const char *list = getenv("VTD_LIST");
 		int mb_w = envi_default("VTD_W", 4096);
@@ -400,6 +399,5 @@ int main(void)
 		}
 		rline("vtdec DONE");
 		if (g_report) { fflush(g_report); fclose(g_report); g_report = NULL; }
-	}
 	return 0;
 }
