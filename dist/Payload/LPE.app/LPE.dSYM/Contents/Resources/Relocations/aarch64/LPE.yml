@@ -1,0 +1,21 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'dist/Payload/LPE.app/LPE'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100005930, symSize: 0xA1C }
+  - { offsetInCU: 0x59, offset: 0x59, size: 0x8, addend: 0x0, symName: _g_len, symObjAddr: 0x6260, symBinAddr: 0x10000C000, symSize: 0x0 }
+  - { offsetInCU: 0x8B, offset: 0x8B, size: 0x8, addend: 0x0, symName: _g_out, symObjAddr: 0x6268, symBinAddr: 0x10000C008, symSize: 0x0 }
+  - { offsetInCU: 0xAD, offset: 0xAD, size: 0x8, addend: 0x0, symName: _g_blob, symObjAddr: 0xA268, symBinAddr: 0x100010008, symSize: 0x0 }
+  - { offsetInCU: 0x2D4, offset: 0x2D4, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100005930, symSize: 0xA1C }
+  - { offsetInCU: 0x5C0, offset: 0x5C0, size: 0x8, addend: 0x0, symName: _say, symObjAddr: 0xA1C, symBinAddr: 0x10000634C, symSize: 0xF8 }
+  - { offsetInCU: 0x60F, offset: 0x60F, size: 0x8, addend: 0x0, symName: _run_trigger, symObjAddr: 0xB14, symBinAddr: 0x100006444, symSize: 0x794 }
+  - { offsetInCU: 0x84D, offset: 0x84D, size: 0x8, addend: 0x0, symName: _flush_result, symObjAddr: 0x12A8, symBinAddr: 0x100006BD8, symSize: 0x184 }
+  - { offsetInCU: 0x8AB, offset: 0x8AB, size: 0x8, addend: 0x0, symName: _region_state, symObjAddr: 0x142C, symBinAddr: 0x100006D5C, symSize: 0x44 }
+  - { offsetInCU: 0x8E1, offset: 0x8E1, size: 0x8, addend: 0x0, symName: _try_spawn_flags, symObjAddr: 0x1470, symBinAddr: 0x100006DA0, symSize: 0x168 }
+  - { offsetInCU: 0x98A, offset: 0x98A, size: 0x8, addend: 0x0, symName: _find_exec_base, symObjAddr: 0x15D8, symBinAddr: 0x100006F08, symSize: 0x110 }
+  - { offsetInCU: 0xA22, offset: 0xA22, size: 0x8, addend: 0x0, symName: _parse_own_dsc, symObjAddr: 0x16E8, symBinAddr: 0x100007018, symSize: 0x1FC }
+  - { offsetInCU: 0xB10, offset: 0xB10, size: 0x8, addend: 0x0, symName: _build_slide_blob, symObjAddr: 0x18E4, symBinAddr: 0x100007214, symSize: 0xD4 }
+  - { offsetInCU: 0xB65, offset: 0xB65, size: 0x8, addend: 0x0, symName: _build_cfg, symObjAddr: 0x19B8, symBinAddr: 0x1000072E8, symSize: 0x2AC }
+  - { offsetInCU: 0xBD6, offset: 0xBD6, size: 0x8, addend: 0x0, symName: _bmemset, symObjAddr: 0x1C64, symBinAddr: 0x100007594, symSize: 0x5C }
+  - { offsetInCU: 0xC28, offset: 0xC28, size: 0x8, addend: 0x0, symName: _raw_syscall, symObjAddr: 0x1CC0, symBinAddr: 0x1000075F0, symSize: 0xF4 }
+...
