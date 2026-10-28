@@ -1015,3 +1015,41 @@
   3. the moment "App installed successfully" appears: powershell -File o_c_fire.ps1
   4. read the outcome: process died mid-report = the bug fired; clean report = the client refused
 EOF_MARKER_UNUSED
+
+---
+
+## 2026-10-28 ~16:30Z O-D (fourth sibling - handshake/recon + BaseBin integration lane) - JOINED, board rules honored
+- He ordered the two-heads play ("go on work with each other and talk"). I joined via the shared
+  agent run: my recon worker (w-35acc1: TrollStore-on-26.x / signing / blob-saving status) is
+  nested alongside GH-HUNT-1, GH-HUNT-2, BUILD-SPEC-1. BUILD-SPEC-1 has consumed two intel drops
+  from me (history 1->4). No device touches (O-B lane), no kext touches (nj2 lane) - mine is the
+  recon + post-exploitation-stack lane.
+- CHIP CORRECTION for the record: t8140 = A18 Pro (SPTM+TXM), matching the PLAN table. Any A14
+  assumption is void. Chip-generation note: the public SPTM-generation bypass candidate is TITAN
+  (AlfieCG, shipped in Dopamine 3.0), not momentarius (that one is A12/A13 PPL-gen). Our chain
+  design (object replacement -> physrw, zero page-table writes) correctly needs no PPL bypass for
+  uid 0; this only matters if stage F ever wants deeper than userland.
+- RESUME section 7 point 5 is STALE: "no SPTM bypass >= 17.4" was true before Aug 2026. Dopamine
+  3.0 (2026-08-07) shipped the Titan PPL/SPTM bypass (16.5.1-17.3.1 all devices) + momentarius
+  (A12/A13 to 26.0.1, 26.1b1-3 as of 3.0.5; 3.0.11 is current as of 2026-10-12). Still nothing
+  public for A18 on 26.4 - the build-our-own plan stands.
+- NEW ON DISK: G:\op lab\Dopamine = opa334/Dopamine 3.x clone WITH submodules (XPF, ChOma,
+  opainject, litehook). XPF = the offset-resolver/exploit-interface layer; libjailbreak source
+  already carries 26.4/26.5/27.0 kernel knowledge (pa_to_sptm_frame: root-frame type 40 on
+  26.4-26.5, 41 on 27.0+). BaseBin (launchdhook, systemhook, trustcache, ElleKit, rootless
+  bootstrap) is a complete reference implementation of stage E/F - BORROW, DO NOT REWRITE.
+- NEW ARTIFACTS (committed in this push, dirtyslide/src/):
+  - rie_offsets_23E246.h = the OFFSET CONTRACT: every macro stage-2 needs, values 0,
+    RIE_OFFSETS_VERIFIED=0. OWNER: whoever resolves xnu-12377.1.9 struct offsets (kext lane or
+    BUILD-SPEC-1). Fill, verify against the 23E246 kernelcache, flip the flag.
+  - rie_stage2_v3.c = completed stage-2 driver (the old rie_stage2.c was a stub: placeholder
+    patch_cred, sc/sc7 mismatch, missing header). S4 = PAC-safe pipe-window retarget R/W (never
+    forges the signed buffer pointer), S5 = proc heap-scan -> cr_uid/cr_ruid=0 + CS_DEBUGGED with
+    read-back verify, S6 = /var/root/rie_pwned + Documents result drop. Halts at stage 20 / err
+    0xEE until offsets verify; PPL wall reports stage 500 / 0xE5 and reserves rie_kwrite_ppl()
+    for the signed-continuation gadget (kpwn_continuation, +0xd8/+0xe0 hypotheses).
+- OPEN QUESTION (GH-HUNT-1 owns): does the public Dopamine 26.0.1 kernel entry (kfd lineage) die
+  in 26.1-26.4? If it survives, stage F gets a shortcut and part of the private kernel leg is
+  redundant. Check the BaseBin exploit wiring + Apple 26.1-26.4 notes.
+- Rig hygiene honored: batched polls, no tight loops, long jobs detached (per the 4.7GB sqlite
+  lesson). Working copies also at G:\op lab\iPhone16Pro-JB\src\ (non-repo workspace).
