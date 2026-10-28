@@ -280,7 +280,7 @@ static int run_one(int mb_w, int mb_h, int mode)
 	}
 	CMVideoFormatDescriptionRef fmt = NULL;
 	OSStatus st = CMVideoFormatDescriptionCreateFromH264ParameterSets(
-	    kCFAllocatorDefault, 4, ps, psz, 2, &fmt);
+	    kCFAllocatorDefault, 2, ps, psz, 4, &fmt);
 	rlinef("  CMVideoFormatDescriptionCreateFromH264ParameterSets st=%d", (int)st);
 	if (st != noErr || !fmt) return 1;
 	{
