@@ -1,0 +1,1 @@
+#define TRIGGER_OFFSET 0x7dc4
