@@ -1,0 +1,11 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'dist5/Payload/CGPOC.app/CGPOC'
+relocations:
+  - { offsetInCU: 0x27, offset: 0x27, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100007404, symSize: 0x3AC }
+  - { offsetInCU: 0x4E, offset: 0x4E, size: 0x8, addend: 0x0, symName: _g_report, symObjAddr: 0x2340, symBinAddr: 0x10000C080, symSize: 0x0 }
+  - { offsetInCU: 0x260, offset: 0x260, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100007404, symSize: 0x3AC }
+  - { offsetInCU: 0x318, offset: 0x318, size: 0x8, addend: 0x0, symName: _report_open, symObjAddr: 0x3AC, symBinAddr: 0x1000077B0, symSize: 0x124 }
+  - { offsetInCU: 0x366, offset: 0x366, size: 0x8, addend: 0x0, symName: _stage_pdf, symObjAddr: 0x4D0, symBinAddr: 0x1000078D4, symSize: 0x144 }
+  - { offsetInCU: 0x3C6, offset: 0x3C6, size: 0x8, addend: 0x0, symName: _report_line, symObjAddr: 0x614, symBinAddr: 0x100007A18, symSize: 0x84 }
+...
