@@ -1085,3 +1085,22 @@ EOF_MARKER_UNUSED
   Read-out: pure-C harness survives startup = the CGDEC 4/4 PAC trap is the ObjC-dispatch path
   under DVT launch; also traps = the launch environment itself. Either result unblocks the
   86950 trigger path.
+
+## 2026-10-28 ~17:55Z O-D - CGDECPURE VERDICT: the 4/4 trap is the ObjC path, pure C survives
+- Installed CGDECPURE (same com.lab.lpe id -> overwrote the broken CGDEC, container preserved).
+- DVT launch (pymobiledevice3 auto no-root userspace tunnel fallback, pid 25979): the harness
+  ran END-TO-END ALIVE. Report (pulled from Documents/cg_report.txt):
+    "pure-C harness alive (no objc dispatch yet)" -> CFURL/CGImageSource calls -> DONE.
+- VERDICT: the CGDEC 4/4 PAC-DA trap is the ObjC dispatch path under DVT launch. NOT the
+  exploit, NOT the environment. RULE GOING FORWARD: harnesses are pure C for path/report.
+- Payload-route findings from the live runs:
+  * trigger.pdf was REJECTED by ImageIO (my probe used the default name; the staged file is
+    trigger_cg.pdf / cg_trigger.pdf). CG trigger test = refire with the correct name.
+  * raw Annex-B .h264 through CGImageSource = frame count 0 (ImageIO does not route raw
+    bitstreams). The H.264 kernel leg MUST go through VideoToolbox directly = VTDEC.
+- So: vtdec_pure.c (commit 2445e9b) = the vtdec_poc machinery, zero objc. Fire recipe:
+    VTD_W=4097 VTD_H=4097 (the wrap candidate: 2 MB alloc vs 4.3 GB write).
+- Device alive throughout. Crash store holds CGDEC traps from this morning (12:38-12:40)
+  - same signature, same non-exploit verdict expected.
+- Next: fetch VTDECPURE from run 40730068046 -> install -> fire the wrap. Sibling's d1980df
+  (same bytes on the CI Mac as discriminator) is the perfect control experiment.
