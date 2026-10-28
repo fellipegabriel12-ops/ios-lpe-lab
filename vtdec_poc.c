@@ -121,6 +121,15 @@ static void bw_ue(bw_t *b, unsigned v)
 	bw_bits(b, nbits + 1, code);
 }
 
+/* signed Exp-Golomb: se(v) = ue(2v) for v>=0, ue(-2v-1) for v<0.
+   se(0) is a single '1' bit - writing raw zero bits here is what made
+   Apple reject every parameter set with -12712. */
+static void bw_se(bw_t *b, int v)
+{
+	unsigned mapped = (v >= 0) ? (unsigned)(2 * v) : (unsigned)(-2 * v - 1);
+	bw_ue(b, mapped);
+}
+
 static void bw_trailing(bw_t *b)
 {
 	bw_bit(b, 1);
@@ -167,9 +176,9 @@ static void build_pps(bw_t *b)
 	bw_ue(b, 0);                  /* num_ref_idx_l1_default_active_minus1 */
 	bw_bit(b, 0);                 /* weighted_pred_flag */
 	bw_bits(b, 2, 0);             /* weighted_bipred_idc */
-	bw_bits(b, 2, 0);             /* pic_init_qp_minus26 (se) */
-	bw_bit(b, 0);                 /* pic_init_qs_minus26 (se) */
-	bw_bit(b, 0);                 /* chroma_qp_index_offset */
+	bw_se(b, 0);                  /* pic_init_qp_minus26 (se(0) = single '1' bit) */
+	bw_se(b, 0);                  /* pic_init_qs_minus26 */
+	bw_se(b, 0);                  /* chroma_qp_index_offset */
 	bw_bit(b, 1);                 /* deblocking_filter_control_present_flag */
 	bw_bit(b, 0);                 /* constrained_intra_pred_flag */
 	bw_bit(b, 0);                 /* redundant_pic_cnt_present_flag */
