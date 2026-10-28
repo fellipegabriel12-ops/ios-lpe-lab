@@ -317,14 +317,11 @@ static int run_one(int mb_w, int mb_h, int mode)
 	}
 	if (sample) {
 		rline("  submitting the frame (this is where the kext allocates)");
+		/* iOS signature: (session, sampleBuffer, decodeFlags, sourceFrameRefCon,
+		   VTDecodeInfoFlags *infoFlagsOut) - output arrives via the callback
+		   record registered at session-create time (dec_cb). */
 		VTDecodeInfoFlags iflags = 0;
-		OSStatus ds = VTDecompressionSessionDecodeFrame(sess, sample,
-		    ^(OSStatus status, VTDecodeInfoFlags info, CVImageBufferRef img,
-		      CMTime pts, CMTime dur) {
-		        (void)info; (void)img; (void)pts; (void)dur;
-		        g_frame_count++;
-		        rlinef("decode block: status=%d", (int)status);
-		    }, NULL, &iflags);
+		OSStatus ds = VTDecompressionSessionDecodeFrame(sess, sample, 0, NULL, &iflags);
 		rlinef("  VTDecompressionSessionDecodeFrame st=%d (kext verdict)", (int)ds);
 		VTDecompressionSessionFinishDelayedFrames(sess);
 		CFRelease(sample);
