@@ -1,4 +1,4 @@
-name: macos-vtdec-test
+﻿name: macos-vtdec-test
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ jobs:
 
       - name: Compile vtdec_poc for macOS
         run: |
-          xcrun -sdk macosx clang vtdec_poc.c -o vtdec_mac \
+          xcrun -sdk macosx clang -x objective-c vtdec_poc.c -o vtdec_mac \
             -framework Foundation -framework CoreMedia -framework CoreVideo \
             -framework VideoToolbox 2>&1 | head -40
           ls -la vtdec_mac
@@ -29,3 +29,4 @@ jobs:
         with:
           name: macos-vtdec-report
           path: ~/Documents/vtdec_report.txt
+
