@@ -1,0 +1,31 @@
+name: macos-vtdec-test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile vtdec_poc for macOS
+        run: |
+          xcrun -sdk macosx clang vtdec_poc.c -o vtdec_mac \
+            -framework Foundation -framework CoreMedia -framework CoreVideo \
+            -framework VideoToolbox 2>&1 | head -40
+          ls -la vtdec_mac
+
+      - name: Run the matrix on macOS
+        run: |
+          ./vtdec_mac ; echo "exit=$?"
+          echo "=== report ==="
+          cat ~/Documents/vtdec_report.txt | tail -80
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-vtdec-report
+          path: ~/Documents/vtdec_report.txt
