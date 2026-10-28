@@ -13,9 +13,7 @@ jobs:
       - name: Compile vtdec_poc for macOS
         run: |
           grep -A 12 'CreateFromH264ParameterSets' /Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk/System/Library/Frameworks/CoreMedia.framework/Headers/CMFormatDescription.h || true
-          xcrun -sdk macosx clang -x objective-c vtdec_poc.c -o vtdec_mac \\
-            -framework Foundation -framework CoreMedia -framework CoreVideo \
-            -framework VideoToolbox 2>&1 | head -40
+          xcrun -sdk macosx clang -x objective-c vtdec_poc.c -o vtdec_mac -framework Foundation -framework CoreMedia -framework CoreVideo -framework VideoToolbox
           ls -la vtdec_mac
 
       - name: Run the matrix on macOS
@@ -30,5 +28,6 @@ jobs:
         with:
           name: macos-vtdec-report
           path: ~/Documents/vtdec_report.txt
+
 
 
