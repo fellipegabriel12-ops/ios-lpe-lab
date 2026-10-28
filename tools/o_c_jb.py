@@ -353,8 +353,10 @@ def install(args):
                     log(f"reprovision failed: {e}", logf)
                 time.sleep(10)
                 continue
-            log(f"attempt {attempt}: rc={rc}, no recognised retry trigger - stopping", logf)
-            break
+            log(f"attempt {attempt}: rc={rc}, no recognised retry trigger - "
+                f"retrying anyway (a resend cycle can exit rc=101 here)", logf)
+            time.sleep(20)
+            continue
         else:
             log(f"gave up after {max_attempts} attempts", logf)
     finally:
@@ -405,6 +407,7 @@ def run_once(args, apple_id, password, ocr, logf, attempt):
 
     lines = []
     code_sent = False
+    last_submit = 0.0         # when the last 2FA code was submitted (anti-churn guard)
     rejected = set()          # codes Apple already said were wrong (-21669)
     last_prompt_code = None
     deadline = time.time() + args.timeout
@@ -442,7 +445,7 @@ def run_once(args, apple_id, password, ocr, logf, attempt):
                 # The eyes (o_c_code_watch.py) keep the freshest code on disk. We
                 # read it, and if Apple rejects it (-21669) we ask for a resend
                 # and wait for a DIFFERENT code to appear on screen.
-                for rnd in range(24):
+                for rnd in range(240):
                     code = read_stash(max_age=300, exclude=rejected)
                     if code:
                         break
@@ -454,6 +457,7 @@ def run_once(args, apple_id, password, ocr, logf, attempt):
                         proc.stdin.write(code + "\n")
                         proc.stdin.flush()
                         code_sent = True
+                        last_submit = time.time()
                         last_prompt_code = code
                         rejected.add(code)
                         log(f"submitted 2FA code {code}", logf)
@@ -462,6 +466,22 @@ def run_once(args, apple_id, password, ocr, logf, attempt):
                         break
                 else:
                     log("no code available after 6 rounds", logf)
+            elif "select one of these numbers" in low or 'enter "r" to resend' in low:
+                # isideload prints the fallback options as part of the same
+                # prompt block - answering 'r' every time would churn requests
+                # and invalidate the banner code mid-relay. Only resend if no
+                # code was submitted in the last 2 minutes.
+                if time.time() - last_submit > 120:
+                    log("fallback prompt -> answering 'r' (nothing submitted recently)", logf)
+                    try:
+                        proc.stdin.write("r\n")
+                        proc.stdin.flush()
+                    except (OSError, ValueError) as e:
+                        log(f"FAILED to answer resend prompt: {type(e).__name__}: {e}", logf)
+                        break
+                    time.sleep(2.0)
+                else:
+                    log("fallback prompt -> ignoring (a code was just submitted)", logf)
             elif "select a team" in low or "please select a team" in low:
                 proc.stdin.write("1\n")
                 proc.stdin.flush()
