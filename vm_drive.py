@@ -64,16 +64,20 @@ def main():
 
     CMDS = [
         'uname -v',
-        'uname -m',
         'id',
-        'ls /',
-        'ls /System/Library/Frameworks/ 2>/dev/null | head -60',
-        'ls -d /System/Library/Frameworks/CoreGraphics.framework /System/Library/Frameworks/VideoToolbox.framework /System/Library/Frameworks/ImageIO.framework 2>/dev/null',
-        'ls /System/Library/Caches/com.apple.dyld/ 2>/dev/null | head',
-        'ls /System/Library/Extensions/ 2>/dev/null | grep -iE "AVE|AGX|apfs" | head',
-        'kextstat 2>/dev/null | head -40 || true',
-        'sysctl -a 2>/dev/null | grep -iE "kern.osversion|kern.osrelease" | head',
-        'which clang cc gcc python3 2>/dev/null; ls /usr/bin | grep -E "^(clang|cc|gcc|python)" | head',
+        'mount',
+        'ls /dev | head -60',
+        'ls -la /dev/*disk* 2>/dev/null | head -20',
+        'ls /usr/lib | head -40',
+        'ls /usr/lib/dyld 2>/dev/null; file /usr/lib/dyld 2>/dev/null || true',
+        'ls /System/Library/Extensions/ 2>/dev/null | head -40',
+        'ls /sbin /bin /usr/sbin /usr/bin 2>/dev/null | head -60',
+        'sysctl -a 2>/dev/null | head -60',
+        'cat /etc/fstab 2>/dev/null; ls /etc 2>/dev/null | head -20',
+        'dmesg 2>/dev/null | head -20 || true',
+        'ls /private/var 2>/dev/null; ls /private/var/db 2>/dev/null | head',
+        'ioreg -l 2>/dev/null | head -40 || true',
+        'ls /System/Library/CoreServices 2>/dev/null | head',
     ]
     for c in CMDS:
         print(f'[vm] $ {c}', flush=True)
