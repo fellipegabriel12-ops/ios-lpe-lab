@@ -307,6 +307,33 @@ static int run_one(int mb_w, int mb_h, int mode)
 	OSStatus st = CMVideoFormatDescriptionCreateFromH264ParameterSets(
 	    kCFAllocatorDefault, 4, ps, psz, 2, &fmt);
 	rlinef("  CMVideoFormatDescriptionCreateFromH264ParameterSets st=%d", (int)st);
+	if (st != noErr || !fmt) {
+		/* legacy path: CMVideoFormatDescriptionCreate + avcC as extension */
+		unsigned char avcc2[1024];
+		int a2 = build_avcC(avc_sps, &pps, avcc2, sizeof(avcc2));
+		if (a2 > 0) {
+			CFDataRef avcData = CFDataCreate(kCFAllocatorDefault, avcc2, (CFIndex)a2);
+			const void *keys[1] = { CFSTR("avcC") };
+			const void *vals[1] = { avcData };
+			CFDictionaryRef ext = CFDictionaryCreate(kCFAllocatorDefault, keys, vals, 1,
+			                                         &kCFTypeDictionaryKeyCallBacks,
+			                                         &kCFTypeDictionaryValueCallBacks);
+			CMVideoFormatDescriptionRef fmt2 = NULL;
+			OSStatus st2 = CMVideoFormatDescriptionCreate(kCFAllocatorDefault,
+			                                              kCMVideoCodecType_H264,
+			                                              (int32_t)(mb_w * 16),
+			                                              (int32_t)(mb_h * 16),
+			                                              ext, &fmt2);
+			rlinef("  legacy CMVideoFormatDescriptionCreate+avcC st=%d", (int)st2);
+			if (st2 == noErr && fmt2) {
+				fmt = fmt2;
+				rline("  LEGACY PATH ACCEPTED - using it");
+			}
+			if (ext) CFRelease(ext);
+			if (avcData) CFRelease(avcData);
+		}
+	}
+	rlinef("  CMVideoFormatDescriptionCreateFromH264ParameterSets st=%d", (int)st);
 	if (st != noErr || !fmt) return 1;
 	{
 		CMVideoDimensions dim = CMVideoFormatDescriptionGetDimensions(fmt);
