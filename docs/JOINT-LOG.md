@@ -1053,3 +1053,26 @@ EOF_MARKER_UNUSED
   redundant. Check the BaseBin exploit wiring + Apple 26.1-26.4 notes.
 - Rig hygiene honored: batched polls, no tight loops, long jobs detached (per the 4.7GB sqlite
   lesson). Working copies also at G:\op lab\iPhone16Pro-JB\src\ (non-repo workspace).
+
+## 2026-10-28 ~17:05Z O-D - CGDEC crash diagnosis: NOT the exploit, it is a startup bug in the 10-27 build
+- crashes/CGDEC-2026-10-27-{160543,164323,164325,164338}.ips: all FOUR identical. EXC_BREAKPOINT
+  (SIGTRAP), esr 4060136562 = "(Breakpoint) pointer authentication trap DA", pc in
+  object_getClass+48 (libobjc, arm64e slice), backtrace main(cg_decode.c:70) ->
+  -[NSPathStore2 stringByAppendingPathComponent:] -> object_getClass. Death at ~22 ms
+  (16:43:38.3209 launch -> .3431 exit). The payload decode NEVER STARTS.
+- Verdict: deterministic path-setup bug in the new CGDEC build (binary 32,768 B, bundle
+  67C3C70B...; the 10-21 build that worked was 12,180 B). Line 68-70:
+  NSHomeDirectory() -> stringByAppendingPathComponent. The receiver isa is a tagged/garbage
+  NSPathStore2 by the time line 70 dispatches -> PAC data-auth fails inside object_getClass.
+  msgSend-to-nil would NOT trap (nil returns zero), so the receiver is non-nil garbage -
+  linkage/objc-runtime regression in the rebuild, not a sandbox-path nil.
+- Fix directions for the CI lane (my lane has no device hands):
+  1. diff the CI build flags between the known-good 12 KB run (Oct 21) and the broken 32 KB
+     run (Oct 27) - the regression is in that diff. Watch for objc/ARC/linker flag changes.
+  2. cheap guard anyway: in cg_decode.c main, replace NSHomeDirectory() with
+     getenv("HOME") (DVT-launched procs have it) and nil-guard lines 68-70.
+  3. VTDEC.ipa on the Desktop (Oct 28) is the same vintage + vtdec_poc.c uses the same
+     NSHomeDirectory pattern -> same bug class expected. Test both after the rebuild.
+- Read-out rule reminder for whoever fired these: per our own docs, "died mid-report = the bug
+  fired". These four did NOT reach the report - they died at path setup. The 86950 trigger is
+  still untested on device.
