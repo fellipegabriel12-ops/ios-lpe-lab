@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-vm_drive.py - boots the darwin-vm iOS 26.4 QEMU image on a CI macOS runner,
-drives the serial console (root shell), runs a probe battery, saves the
-full transcript as an artifact.
+vm_drive.py v2 - boots the darwin-vm iOS 26.4 QEMU image, drives the serial
+console root shell, runs a probe battery, saves the transcript.
+
+v2 fixes: prompt is bash-5.3 on 26.4 (regex-matched, version-agnostic),
+chunked stdout reads for speed, longer boot window.
 """
-import subprocess, sys, time, os
+import subprocess, sys, time, os, re
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -22,7 +24,7 @@ ARGS = [
 if os.path.exists('firmware/sptm'):
     ARGS += ['-sptm', 'firmware/sptm', '-txm', 'firmware/txm']
 
-PROMPT = b'bash-3.2# '
+PROMPT_RE = re.compile(rb'bash-[\d.]+# $')
 
 def main():
     p = subprocess.Popen([QEMU] + ARGS,
@@ -30,6 +32,7 @@ def main():
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
                          bufsize=0)
+    fd = p.stdout.fileno()
     tr = open('transcript.txt', 'wb')
     buf = b''
 
@@ -37,40 +40,40 @@ def main():
         nonlocal buf
         end = time.time() + timeout
         while time.time() < end:
-            ch = p.stdout.read(1)
-            if not ch:
+            chunk = os.read(fd, 65536)
+            if not chunk:
                 return None
-            buf += ch
-            tr.write(ch)
+            buf += chunk
+            tr.write(chunk)
             tr.flush()
-            if buf.endswith(PROMPT):
+            m = PROMPT_RE.search(buf[-64:])
+            if m:
                 out, buf = buf, b''
                 return out
         return None
 
-    print('[vm] booting (TCG, expect 1-4 min to first prompt)...', flush=True)
-    first = read_until_prompt(480)
+    print('[vm] booting (TCG; first prompt may take several minutes)...', flush=True)
+    first = read_until_prompt(900)
     if first is None:
         print('[vm] BOOT TIMEOUT - transcript saved', flush=True)
         tr.close()
         p.kill()
         sys.exit(2)
-    tail = first.decode(errors='replace')[-3000:]
+    tail = first.decode(errors='replace')[-2000:]
     print('[vm] BOOT OK, last output:\n' + tail, flush=True)
 
     CMDS = [
         'uname -v',
         'uname -m',
-        'sw_vers 2>/dev/null || true',
+        'id',
         'ls /',
-        'ls /System/Library/Frameworks/ 2>/dev/null | head -50',
+        'ls /System/Library/Frameworks/ 2>/dev/null | head -60',
         'ls -d /System/Library/Frameworks/CoreGraphics.framework /System/Library/Frameworks/VideoToolbox.framework /System/Library/Frameworks/ImageIO.framework 2>/dev/null',
         'ls /System/Library/Caches/com.apple.dyld/ 2>/dev/null | head',
         'ls /System/Library/Extensions/ 2>/dev/null | grep -iE "AVE|AGX|apfs" | head',
         'kextstat 2>/dev/null | head -40 || true',
-        'id',
-        'sysctl hw.model 2>/dev/null || true',
         'sysctl -a 2>/dev/null | grep -iE "kern.osversion|kern.osrelease" | head',
+        'which clang cc gcc python3 2>/dev/null; ls /usr/bin | grep -E "^(clang|cc|gcc|python)" | head',
     ]
     for c in CMDS:
         print(f'[vm] $ {c}', flush=True)
@@ -80,13 +83,12 @@ def main():
         except Exception as e:
             print(f'[vm] stdin failed: {e}', flush=True)
             break
-        out = read_until_prompt(90)
+        out = read_until_prompt(120)
         if out is None:
             print(f'[vm] TIMEOUT/EOF on: {c}', flush=True)
             break
         print(out.decode(errors='replace'), flush=True)
 
-    # quit qemu: ctrl-a then x
     try:
         p.stdin.write(b'\x01x')
         p.stdin.flush()

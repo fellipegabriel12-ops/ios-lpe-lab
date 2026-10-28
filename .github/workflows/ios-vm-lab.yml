@@ -6,17 +6,27 @@ on:
 jobs:
   vm:
     runs-on: macos-15
-    timeout-minutes: 55
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
       - name: Fetch darwin-vm
         run: git clone --depth 1 https://github.com/jprx/darwin-vm.git vm
 
+      - name: Cache firmware + qemu build
+        id: vmcache
+        uses: actions/cache@v4
+        with:
+          path: |
+            vm/firmware
+            vm/qemu-sptm/build/qemu-system-aarch64
+          key: iosvm-264-23E246-qemu-v1
+
       - name: Install deps
         run: brew install jq ipsw socat
 
       - name: Extract iOS 26.4 firmware (iPhone17,3 / t8140)
+        if: steps.vmcache.outputs.cache-hit != 'true'
         working-directory: vm
         run: |
           export DEVNAME="iPhone17,3"
@@ -26,6 +36,7 @@ jobs:
           ls -la firmware/
 
       - name: Build qemu-sptm
+        if: steps.vmcache.outputs.cache-hit != 'true'
         working-directory: vm
         run: |
           git submodule update --init
