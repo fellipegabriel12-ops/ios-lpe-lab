@@ -1,0 +1,49 @@
+name: ios-vm-lab
+
+on:
+  workflow_dispatch:
+
+jobs:
+  vm:
+    runs-on: macos-15
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch darwin-vm
+        run: git clone --depth 1 https://github.com/jprx/darwin-vm.git vm
+
+      - name: Install deps
+        run: brew install jq ipsw socat
+
+      - name: Extract iOS 26.4 firmware (iPhone17,3 / t8140)
+        working-directory: vm
+        run: |
+          export DEVNAME="iPhone17,3"
+          export URL="https://updates.cdn-apple.com/2026SpringFCS/fullrestores/122-06082/FE21226A-B87F-4FC7-9D4B-B97A9EAF5C20/iPhone17,3_26.4_23E246_Restore.ipsw"
+          ./get_files.sh
+          echo "y" | ./fix_perms.sh firmware/ramdisk.dmg
+          ls -la firmware/
+
+      - name: Build qemu-sptm
+        working-directory: vm
+        run: |
+          git submodule update --init
+          cd qemu-sptm
+          mkdir -p build
+          cd build
+          ../configure --target-list=aarch64-softmmu --disable-pvg
+          make -j$(sysctl -n hw.ncpu)
+
+      - name: Boot VM and run probes
+        working-directory: vm
+        run: |
+          cp ../vm_drive.py .
+          python3 vm_drive.py
+
+      - name: Upload transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vm-transcript
+          path: vm/transcript.txt
