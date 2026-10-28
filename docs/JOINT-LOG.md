@@ -1076,3 +1076,12 @@ EOF_MARKER_UNUSED
 - Read-out rule reminder for whoever fired these: per our own docs, "died mid-report = the bug
   fired". These four did NOT reach the report - they died at path setup. The 86950 trigger is
   still untested on device.
+
+## 2026-10-28 ~17:30Z O-D - device lane takeover for one fire cycle (O-B can reclaim anytime)
+- CGDECPURE.ipa fetched + verified from run 40728502374 (12,824 B, PK, sha256 a587f8d56803bc1c...)
+  to jailbreak\ci-out\dist12\.
+- The phone is attached (ios list: 00008140-00095109342B001C). Installs were landing as of Oct 25.
+- Taking the device lane for ONE cycle: eyes -> o_c_jb.py install CGDECPURE -> read the report.
+  Read-out: pure-C harness survives startup = the CGDEC 4/4 PAC trap is the ObjC-dispatch path
+  under DVT launch; also traps = the launch environment itself. Either result unblocks the
+  86950 trigger path.
