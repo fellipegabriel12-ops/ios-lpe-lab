@@ -304,8 +304,12 @@ static int run_one(int mb_w, int mb_h, int mode)
 		rlinef("    %s", hx);
 	}
 	CMVideoFormatDescriptionRef fmt = NULL;
+	/* REAL signature: (allocator, parameterSetCount, parameterSetPointers,
+	   parameterSetSizes, NALUnitHeaderLength, out) - count SECOND, nalLen FIFTH.
+	   Our old call passed 4 into count (claiming 4 sets -> API read 2 garbage
+	   stack pointers as sets 3/4) and 2 into nalLen -> -12712 forever. */
 	OSStatus st = CMVideoFormatDescriptionCreateFromH264ParameterSets(
-	    kCFAllocatorDefault, 4, ps, psz, 2, &fmt);
+	    kCFAllocatorDefault, 2, ps, psz, 4, &fmt);
 	rlinef("  CMVideoFormatDescriptionCreateFromH264ParameterSets st=%d", (int)st);
 	if (st != noErr || !fmt) {
 		/* legacy path: CMVideoFormatDescriptionCreate + avcC as extension */
