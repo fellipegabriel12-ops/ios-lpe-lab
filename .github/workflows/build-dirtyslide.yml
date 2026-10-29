@@ -1,0 +1,75 @@
+name: build-dirtyslide-ios
+on:
+  push:
+    paths:
+      - 'dirtyslide/**'
+      - '.github/workflows/build-dirtyslide.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: build the iOS payload
+        run: |
+          set -e
+          xcodebuild -version
+          cd dirtyslide
+          # iOS keeps the dyld cache outside the Cryptexes/OS prefix
+          sed -i '' 's#/System/Cryptexes/OS/System/Library/Caches/com.apple.dyld/#/System/Library/Caches/com.apple.dyld/#g' DirtySlide/myimpl.m DirtySlide/main.m || true
+          grep -n "dyld_shared_cache_arm64e" DirtySlide/myimpl.m DirtySlide/main.m || true
+          xcodebuild -project DirtySlide.xcodeproj -target DirtySlide -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM="" PRODUCT_BUNDLE_IDENTIFIER=com.lab.dirtyslide \
+            ARCHS=arm64e ONLY_ACTIVE_ARCH=NO build
+          # xcodebuild put the products in $SRCROOT/build/Release-iphoneos (the project sets
+          # CONFIGURATION_BUILD_DIR itself); there is no build/Build/Products tree without a scheme.
+          APP=$(find "$PWD/build" -maxdepth 4 -name "DirtySlide.app" -type d 2>/dev/null | head -1)
+          if [ -z "$APP" ]; then
+            echo "##[error]no DirtySlide.app under $PWD/build"; find "$PWD/build" -maxdepth 3 -type d | head -60; exit 1
+          fi
+          echo "APP=$APP"
+          ls -la "$APP"
+          rm -rf dist && mkdir -p dist/Payload
+          cp -R "$APP" dist/Payload/
+          # ensure the payload dylibs keep their exec bits
+          chmod -R +x dist/Payload/*.app/Frameworks 2>/dev/null || true
+          cd dist && zip -q -r -X ../DirtySlide.ipa Payload && cd ..
+          ls -la DirtySlide.ipa
+          # put the ipa at the repo root so the commit/upload steps can see it
+          cp -f DirtySlide.ipa "$GITHUB_WORKSPACE/DirtySlide.ipa"
+          ls -la "$GITHUB_WORKSPACE/DirtySlide.ipa"
+      - name: show the built binary
+        run: |
+          set -e
+          xcodebuild -version
+          cd dirtyslide
+          APP=$(find "$PWD/build" -maxdepth 4 -name "DirtySlide.app" -type d 2>/dev/null | head -1)
+          echo "APP=$APP"
+          file "$APP/DirtySlide" || true
+          otool -L "$APP/DirtySlide" 2>/dev/null | head -20 || true
+          codesign -dvvv "$APP/DirtySlide" 2>&1 | head -10 || true
+      - name: commit artifacts
+        run: |
+          set -e
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          # ORPHAN branch on purpose: the GITHUB_TOKEN may not create/update files under
+          # .github/workflows, and GitHub rejects the whole push if the pushed history
+          # contains such a change ("refusing to allow a GitHub App to create or update
+          # workflow ... without workflows permission"). An orphan branch has exactly one
+          # commit holding only the artefacts -> no workflow file in the pushed range.
+          git checkout --orphan build-dirtyslide
+          git rm -r --cached . >/dev/null 2>&1 || true
+          git add -f dirtyslide/dist dirtyslide/DirtySlide.ipa
+          git commit -m "build: DirtySlide.ipa"
+          git push --force origin "HEAD:build-dirtyslide"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dirtyslide-ios
+          path: |
+            dirtyslide/DirtySlide.ipa
+            dirtyslide/dist/**
