@@ -399,15 +399,28 @@ int main(void)
 			run_one(mb_w, mb_h, m, level);
 		}
 	} else {
-			/* default matrix: both money cases x both modes, 4095 as the
-			   negative-check control (its area is signed-negative so the
-			   kext's tbnz should reject it - a clean error there is GOOD). */
+			/* NO-ENV DEFAULT: launchers on this rig silently drop --env, so the
+			   full level/dims ladder is now COMPILE-TIME. Bare launch = full sweep.
+			   mode 0 sanity block first (3 cases, data continuity), then mode 1
+			   (client-blind path) over the H.264 level ladder - the O-C hypothesis:
+			   AVE2 sizes from level (L3.0 = 3456 MB/frame ceiling) but parses/writes
+			   per SPS dims. The 4096x4096@51 baseline row anchors the verdicts. */
 			static const int cases[3][2] = { { 4096, 4096 }, { 4097, 4097 }, { 4095, 4095 } };
-			for (int m = 0; m < 2; m++)
-				for (int i = 0; i < 3; i++) {
-					rlinef("--- matrix mode=%d %dx%d mbs level=%d ---", m, cases[i][0], cases[i][1], level);
-					run_one(cases[i][0], cases[i][1], m, level);
-				}
+			for (int i = 0; i < 3; i++) {
+				rlinef("--- matrix mode=0 %dx%d mbs level=51 ---", cases[i][0], cases[i][1]);
+				run_one(cases[i][0], cases[i][1], 0, 51);
+			}
+			static const int lad[][3] = {
+				{ 4096, 4096, 51 }, { 4097, 4097, 30 }, { 4097, 4097, 31 },
+				{ 2049, 4097, 30 }, { 4097, 2049, 30 }, { 3073, 4097, 30 },
+				{ 1024, 4097, 30 }, { 4096, 4096, 40 }, { 4096, 4096, 50 },
+				{ 4096, 4096, 60 }, { 4096, 4096, 62 }
+			};
+			const int lad_n = sizeof(lad) / sizeof(lad[0]);
+			for (int i = 0; i < lad_n; i++) {
+				rlinef("--- LADDER mode=1 %dx%d mbs level=%d ---", lad[i][0], lad[i][1], lad[i][2]);
+				run_one(lad[i][0], lad[i][1], 1, lad[i][2]);
+			}
 		}
 		rline("vtdec DONE");
 		if (g_report) { fflush(g_report); fclose(g_report); g_report = NULL; }
