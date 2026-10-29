@@ -1129,3 +1129,32 @@ EOF_MARKER_UNUSED
   VTD_LIST triples "w:h:level" wired; sweep launching next.
 - Ladder file insights (tools/oc_h264_gen.py, O-C's own): LEVELS 30-62, pairs incl 4097x2049,
   3073x4097, 1024x4097 (level 3.0 = 3456 MB ceiling riders).
+
+## 2026-10-29 ~14:15Z O-D - CLIENT GATE BYPASSED (mode 2), the wall is now kext-side: full verdict map on 26.4
+- Full clean run: 18/18 rounds, vtdec DONE, device healthy. Tier-0 gate map for iOS 26.4 /
+  23E246 / t8140 (AppleAVE2 via VideoToolbox, mediaserverd):
+  * CLIENT GATE #1 (the only client-side wall): VTDecompressionSessionCreate dimension cap on
+    the FORMAT's declared dims. Found by: mode 0 (true dims in the format) refused -12910 at
+    EVERY huge size. Mode 1/2 evade it:
+      - mode 1: small SPS in avcC (client blind) + huge in-band SPS -> session st=0, decode
+        callback -12909 (malfunction, deep) on ALL levels 30..62 (level ladder DEAD END
+        disproven: level_idc changes nothing).
+      - mode 2 (NEW, the descriptor lie): CMVideoFormatDescriptionCreate(512x512 lie) + the
+        avcC record inside carries the HUGE SPS -> descriptor accepted (st=0), session
+        created (st=0) FOR ALL MONEY SIZES (4096^2/0-wrap, 4097^2/2MB wrap, 2049x4097,
+        3073x4097 signed-negative) -> decode callback -8971 (kVTVideoDecoderBadDataErr).
+  * THE REMAINING WALL = KEXT/PIPELINE-SIDE: -8971 vs -12909 are DIFFERENT rejections at
+    different depths: both fire AFTER the client gate. -8971 = bad data = an EARLY consistency
+    check (parsed dims vs session config, or slice-vs-dims parse); -12909 = malfunction =
+    deeper. Both are upstream of the vulnerable multiply (no OOB artifacts, no panic).
+- WHY IT MATTERS: the operation's remaining unknown is exactly ONE wall - a kext-side
+  consistency check. The kext-lane register map (new-jailbreak-2) can NAME it (which VN
+  emits -8971/-12909 on 23E246) -> the bypass surface.
+- Also: the duplicate hexdump print per round in vtdec_pure (cosmetic; logs twice) - keep
+  until next clean build.
+- NEXT LEVERS (my lane): (a) build the frame IDR slice with dims CONSISTENT with the record
+  SPS (65552-wide coverage semantics) so the -8971 frame-parse check stops firing on OUR
+  headers - if -8971 = our tiny slice, a consistent-huge-slice IDR changes the verdict;
+  (b) decouple descriptor vs record: descriptor=512x512 + RECORD SPS also small but
+  FRAME's in-band SPS = huge (mode 1x2 hybrid: neither gate sees the huge dims, the frame
+  parse disagrees only with the FRAME's own reference)...
