@@ -1104,3 +1104,28 @@ EOF_MARKER_UNUSED
   - same signature, same non-exploit verdict expected.
 - Next: fetch VTDECPURE from run 40730068046 -> install -> fire the wrap. Sibling's d1980df
   (same bytes on the CI Mac as discriminator) is the perfect control experiment.
+
+## 2026-10-29 ~13:45Z O-D - KERNEL LEG: first complete matrix, mode-1 client-blind path CONFIRMED, kext verdict = -12909
+- Fixed VTDECPURE (double-free dropped, VTD_W/H single-shot wired) installed + fired on the
+  device. Full 6-round matrix COMPLETE, harness ran to DONE, device never dropped.
+- TIER-0 DATA (iOS 26.4 / 23E246 / t8140, mediaserverd AVE2):
+  - mode 0 (huge SPS in avcC): CMVideoFormatDescriptionCreateFromH264ParameterSets ACCEPTS the
+    crazy SPS (st=0) and echoes the true dims (65536/65552/65520) - then
+    VTDecompressionSessionCreate REFUSES: st=-12910. The CLIENT-side gate sees the dims and
+    refuses. Signed-negative control (4095x4095) also refused the same way.
+  - mode 1 (small avcC SPS 32x32mbs + huge in-band SPS): the client describes 512x512 (blind!),
+    EVERY session creates (st=0) for all three sizes, frame submitted, and the decode callback
+    returns -12909 (malfunction) EVERY time. The -12909 differs from the clean -12910 refusals:
+    the pipeline errors INSIDE the decode path on our frames - a distinct, unexplained verdict.
+- READING: the client gate validates avcC dims, not in-band SPS dims. The kext side has NOT yet
+  been observed accepting the huge dims (no OOB artifacts, no panic, device healthy) - but the
+  -12909 malfunction says our frames reach somewhere deep enough that the pipeline chokes on
+  them. Where exactly the kext reads dims (SPS vs avcC record vs client FM) is the open
+  question on 26.4 - kext lane owns that answer from the register-level diff.
+- NEXT (harness side, mine): the LEVEL/DIMS ladder - H.264 level 3.0 caps 3456 MBs/frame; if
+  AVE2 26.4 sizes from the level but parses/writes per SPS dims (or is missing the
+  dims-vs-level check), a low-level SPS with huge dims is the alternate feed that skips BOTH
+  the client dim gate (small avcC SPS) and any dim sanity in the kext. VTD_LEVEL knob +
+  VTD_LIST triples "w:h:level" wired; sweep launching next.
+- Ladder file insights (tools/oc_h264_gen.py, O-C's own): LEVELS 30-62, pairs incl 4097x2049,
+  3073x4097, 1024x4097 (level 3.0 = 3456 MB ceiling riders).
