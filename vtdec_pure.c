@@ -223,10 +223,10 @@ static int build_avcC(bw_t *sps, bw_t *pps, unsigned char *out, size_t outsz)
 	return (int)o;
 }
 
-static int run_one(int mb_w, int mb_h, int mode)
+static int run_one(int mb_w, int mb_h, int mode, int level)
 {
 	bw_t sps, pps, idr;
-	build_sps(&sps, mb_w, mb_h, 51);
+	build_sps(&sps, mb_w, mb_h, level);
 	build_pps(&pps);
 	build_idr(&idr);
 
@@ -377,22 +377,26 @@ int main(void)
 		int mb_w = envi_default("VTD_W", 4096);
 		int mb_h = envi_default("VTD_H", 4096);
 		int mode = envi_default("VTD_MODE", 0);
+		int level = envi_default("VTD_LEVEL", 51); /* the level/dims mismatch knob */
 
 		if (list && *list) {
-			char buf[512];
+			char buf[1024];
 			snprintf(buf, sizeof(buf), "%s", list);
 			for (char *tok = strtok(buf, ","); tok; tok = strtok(NULL, ",")) {
-				int a = 0, b = 0;
-				if (sscanf(tok, "%d:%d", &a, &b) == 2) {
-					rlinef("--- sweep %s ---", tok);
-					run_one(a, b, mode);
+				int a = 0, b = 0, lv = level;
+				if (sscanf(tok, "%d:%d:%d", &a, &b, &lv) == 3) {
+					rlinef("--- sweep %s (level %d) ---", tok, lv);
+					run_one(a, b, mode, lv);
+				} else if (sscanf(tok, "%d:%d", &a, &b) == 2) {
+					rlinef("--- sweep %s (level %d) ---", tok, lv);
+					run_one(a, b, mode, lv);
 				}
 			}
 	} else if (getenv("VTD_W")) {
 		/* explicit single-shot: VTD_W/VTD_H x both modes, nothing else */
 		for (int m = 0; m < 2; m++) {
-			rlinef("--- single VTD_W/H mode=%d %dx%d mbs ---", m, mb_w, mb_h);
-			run_one(mb_w, mb_h, m);
+			rlinef("--- single VTD_W/H mode=%d %dx%d mbs level=%d ---", m, mb_w, mb_h, level);
+			run_one(mb_w, mb_h, m, level);
 		}
 	} else {
 			/* default matrix: both money cases x both modes, 4095 as the
@@ -401,8 +405,8 @@ int main(void)
 			static const int cases[3][2] = { { 4096, 4096 }, { 4097, 4097 }, { 4095, 4095 } };
 			for (int m = 0; m < 2; m++)
 				for (int i = 0; i < 3; i++) {
-					rlinef("--- matrix mode=%d %dx%d mbs ---", m, cases[i][0], cases[i][1]);
-					run_one(cases[i][0], cases[i][1], m);
+					rlinef("--- matrix mode=%d %dx%d mbs level=%d ---", m, cases[i][0], cases[i][1], level);
+					run_one(cases[i][0], cases[i][1], m, level);
 				}
 		}
 		rline("vtdec DONE");
