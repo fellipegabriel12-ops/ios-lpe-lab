@@ -361,7 +361,9 @@ static int run_one(int mb_w, int mb_h, int mode)
 		rline("  no sample - session only");
 	}
 	if (bb) CFRelease(bb);
-	if (raw) free(raw);
+	/* raw is OWNED by the block buffer (kCFAllocatorDefault is the block
+	   deallocator) - freeing it here too was the double-free that aborted
+	   the process right after the kext interaction. DO NOT free raw. */
 	VTDecompressionSessionInvalidate(sess);
 	CFRelease(sess);
 	CFRelease(fmt);
@@ -386,7 +388,13 @@ int main(void)
 					run_one(a, b, mode);
 				}
 			}
-		} else {
+	} else if (getenv("VTD_W")) {
+		/* explicit single-shot: VTD_W/VTD_H x both modes, nothing else */
+		for (int m = 0; m < 2; m++) {
+			rlinef("--- single VTD_W/H mode=%d %dx%d mbs ---", m, mb_w, mb_h);
+			run_one(mb_w, mb_h, m);
+		}
+	} else {
 			/* default matrix: both money cases x both modes, 4095 as the
 			   negative-check control (its area is signed-negative so the
 			   kext's tbnz should reject it - a clean error there is GOOD). */
