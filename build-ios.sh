@@ -436,3 +436,40 @@ cd dist5
 zip -q -r -X VTDECPURE.ipa Payload/VTDECPURE.app
 cd ..
 echo "[+] built dist5/VTDECPURE.ipa"
+
+# ---- VTDECHEVCPURE (O-D) - the AppleAVD/HEVC probe --------------------------------
+# AppleAVD (HEVC decoder kext) probe: 5 unfixed CVEs on 23E246 (84520/65407/84620/84561/65415)
+# reachable from plain VideoToolbox. Runs the same lie-mode matrix through the HEVC route.
+APP15="dist5/Payload/VTDECHEVCPURE.app"
+mkdir -p "$APP15"
+if $CC -O0 -g -o "$APP15/VTDECHEVCPURE" vtdec_hevc_pure.c \
+    -framework VideoToolbox -framework CoreMedia -framework CoreVideo -framework CoreFoundation; then
+  echo "[+] VTDECHEVCPURE compiled (pure C, no Foundation)"
+else
+  echo "[!] VTDECHEVCPURE failed to compile - continuing without it"
+  rm -f "$APP15/VTDECHEVCPURE"
+fi
+cat > "$APP15/Info.plist" <<PLIST15
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key><string>VTDECHEVCPURE</string>
+  <key>CFBundleIdentifier</key><string>com.lab.lpe</string>
+  <key>CFBundleName</key><string>VTDECHEVCPURE</string>
+  <key>CFBundleVersion</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>LSRequiresIPhoneOS</key><true/>
+  <key>MinimumOSVersion</key><string>16.0</string>
+  <key>UIDeviceFamily</key><array><integer>1</integer></array>
+  <key>UILaunchScreen</key><dict/>
+</dict>
+</plist>
+PLIST15
+codesign -s - --force "$APP15/VTDECHEVCPURE" 2>/dev/null || true
+rm -f dist5/VTDECHEVCPURE.ipa
+cd dist5
+zip -q -r -X VTDECHEVCPURE.ipa Payload/VTDECHEVCPURE.app
+cd ..
+echo "[+] built dist5/VTDECHEVCPURE.ipa"
