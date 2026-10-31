@@ -1205,3 +1205,23 @@ EOF_MARKER_UNUSED
 - CI block status: macOS minutes still insta-cancel (3rd rerun attempt cancelled in <30s).
   Zero-CI lanes running: o_c_aved_hunt (23E246 kext census, 301 images carved, running),
   xnu-12377.1.9 headers pulled (thread/proc/ucred/pipe) for the offsets contract fill.
+
+## 2026-10-31 ~13:00Z O-D - census headline: 84607 race door CONFIRMED open on 23E246; HEVC/AVD probe built and queued; 112706 PoC installed + UI test in flight
+- o_c_aved_hunt.py on kcache-26.4/23E246: AppleAVE2 AND AppleAVD - 'EncType mismatch' occurs
+  0 times -> the 84607 fix is ABSENT on our build. The race door is OPEN (headline verdict;
+  their per-kext census step had a small python-name bug, the string-marker verdicts still
+  landed). The 27.0.1 comparison carve is running.
+- O-D built (pushed, zero-CI lane):
+  - vtdec_hevc_pure.c = the AppleAVD/HEVC probe, ranked by 5 LIVE CVEs (84520/65407/84620/84561/65415
+    all unfixed on 23E246, all reachable from plain VideoToolbox): complete lie-mode matrix
+    (0/1/2/3) x 5 sizes, no-env ladder, same proven report protocol. In the waiting-room
+    with build-ios.sh target wired (APP15/VTDECHEVCPURE.ipa) - READY THE MOMENT CI
+    MINUTES RETURN (the only barrier) or the sibling's mac-disriminator picks it up.
+- 112706 PoC installed on the device (com.mconf.poc.2BGBD62KA3, INSTALL COMPLETE 12:45).
+  First Run verdict: the app reached mediaplaybackd (XPC channel UP on iOS 26.4) but the
+  path field was empty - UI needs a typed target. Second-run verdict expected with the
+  wave4-default path (/private/var/mobile/Library/Preferences/.GlobalPreferences.plist).
+  If the fd-steal fires ON 26.4 -> Tier-0 confirmation of the sandbox-read primitive ON
+  OUR EXACT TARGET - and our chain picks up: /usr/libexec ground truth pulls (the offsets
+  contract fill), the offsets-lane artifacts.
+- STILL WAITING-ROOM: the vtdec_hevc build (CI). LIVE: the MConf UI run (He's tapping).
