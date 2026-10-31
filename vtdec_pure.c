@@ -486,6 +486,15 @@ int main(void)
 				rlinef("--- LADDER mode=3 (pure-huge pipeline) %dx%d mbs level=51 ---", lad3[i][0], lad3[i][1]);
 				run_one(lad3[i][0], lad3[i][1], 3, 51);
 			}
+			/* CAP-PINGER - where does the client's -12910 trip? sane dims increasing
+			   (px = mbs*16): answers the session-cap shape for the descriptor's legal
+			   space. Rows below sweep 1024..32768 px on the square diagonal. */
+			static const int caps[] = { 64, 192, 320, 512, 768, 1024, 1280, 2048 };
+			const int caps_n = sizeof(caps) / sizeof(caps[0]);
+			for (int i = 0; i < caps_n; i++) {
+				rlinef("--- CAP-PINGER mode=0 %dx%d mbs level=51 ---", caps[i], caps[i]);
+				run_one(caps[i], caps[i], 0, 51);
+			}
 		}
 		rline("vtdec DONE");
 		if (g_report) { fflush(g_report); fclose(g_report); g_report = NULL; }
