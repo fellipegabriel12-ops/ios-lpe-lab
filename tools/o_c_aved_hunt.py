@@ -35,6 +35,7 @@ import os
 import re
 import struct
 import sys
+import subprocess
 
 WD = r"G:\op lab\iphone-control\jailbreak"
 MH_MAGIC_64 = 0xFEEDFACF
