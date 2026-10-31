@@ -1181,3 +1181,27 @@ EOF_MARKER_UNUSED
   the trigger harness on request.
 - Lever booked now (my lane): measure the client cap trip-point (sane dims ladder mode 0) to
   bound check #1 exactly - it defines the descriptor空间的 usable range for any future bypass.
+
+## 2026-10-31 ~12:25Z O-D - scene intel merge: 112706 file-read PRIMITIVE armed for 26.4 (CVE band confirmed), Nyxian + LiveSim + the recall on the whole sandbox-era week
+- CVE-2026-112706 (CoreMedia bytestream XPC fd-vending via mediaplaybackd): CVE record says
+  fixed in 26.7.2 + 27.2 -> OUR 26.4 IS IN THE AFFECTED BAND (< 26.7.2). ceoca69/wwdxwd PoC
+  (v1.0 release) VERIFIED live on 26.5 by the independent researcher incl a plain 16 Pro run:
+  EPERM control, fd-steal via the Curl create reply, read channel, dir-enum, oracle. Our own
+  Tier-0 on 26.4 fires as soon as the PoC installs (in flight, 2FA dance).
+  AUX opcodes note: 27.0 sealed read/fdsc/getL (-16158), 26.5 had them FULL OPEN -> 26.4
+  likely also open = richer primitive than 27.0.1.
+  USES for the chain: (a) /usr/libexec + system-binary pulls = OFFSET GROUND TRUTH for the
+  offsets contract and the kext lane deps; (b) /System/Library/PrelinkedKernels check; (c) a
+  stage-B-2 chain component (read primitive; write denied -12878, read/enumerate/oracle only).
+- Nyxian Recovery (@cantstopnyxia, Oct 29): full custom recovery + package manager on iOS
+  with no classic JB techniques, no JIT; TWRP itself runs inside it as a "virtualized
+  environment" per observers. LiveSimBooter (khanhduytran0, Oct 28): the real iOS 26.0
+  simulator runtime booted natively in a sandboxed app, no JIT, no computer. The scene is
+  publishing userland-sandbox homes DAILY this week - our stage-F delivery vehicle options
+  are multiplying while the kernel lane matures.
+- Context (Calif/M5 + Hexacon, Rayan deep-dive Oct 29): the 27.0.1/27.1 surface is still
+  open; 27.2 = the 163-fix wave Oct 26. AI-found-bugs (Anthropic Glasswing, known classes) +
+  human chain assembly = the validated pattern our operation mirrors at lab scale.
+- CI block status: macOS minutes still insta-cancel (3rd rerun attempt cancelled in <30s).
+  Zero-CI lanes running: o_c_aved_hunt (23E246 kext census, 301 images carved, running),
+  xnu-12377.1.9 headers pulled (thread/proc/ucred/pipe) for the offsets contract fill.
