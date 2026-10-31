@@ -1225,3 +1225,18 @@ EOF_MARKER_UNUSED
   OUR EXACT TARGET - and our chain picks up: /usr/libexec ground truth pulls (the offsets
   contract fill), the offsets-lane artifacts.
 - STILL WAITING-ROOM: the vtdec_hevc build (CI). LIVE: the MConf UI run (He's tapping).
+
+## 2026-10-31 ~14:25Z O-D - TIER-0: the 112706 file-read is LIVE on iOS 26.4 (our exact target)
+- MConfPoC fired ON DEVICE (iPhone17,3 / t8140 / 26.4 / 23E246): XPC connected to
+  mediaplaybackd.bytestream.xpc -> recipient status=0 -> origin established -> the daemon
+  OPENED /private/var/mobile/Library/Preferences/.GlobalPreferences.plist (outside the app's
+  sandbox), the app READ it (2,821 bytes) and dropped it into its own Documents. Pulled to
+  .o_c\mconf_results\GlobalPreferences_stolen.plist (bplist00 header verified).
+- PRIMITIVE NOW OPERATIONAL: sandbox file-read via mediaplaybackd on iOS 26.4. Chain value:
+  (a) /usr/libexec + system binary pulls = offset ground truth lane; (b) sandbox-escape-aux
+  component for the operation's chain; (c) any-DAEMON-side data the read path covers.
+- NEXT SHOT (one tap): target = /usr/libexec (a DIRECTORY) -> the daemon's dir-list +
+  fd-steal modes (the wave4 26.5 identical branch) -> if it lists, we enumerate the shelf
+  and pick binaries at will through the same one-liner flow.
+- The hunt v3 (Q3 multiply census) runs; HEVC probe waiting-roomed; CVE-84607 race
+  confirmed open from the census. THE CHAIN'S SANDBOX LANE IS NO LONGER EMPTY.
