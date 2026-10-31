@@ -1158,3 +1158,26 @@ EOF_MARKER_UNUSED
   (b) decouple descriptor vs record: descriptor=512x512 + RECORD SPS also small but
   FRAME's in-band SPS = huge (mode 1x2 hybrid: neither gate sees the huge dims, the frame
   parse disagrees only with the FRAME's own reference)...
+
+## 2026-10-31 ~10:55Z O-D - THE WALL IS NAMED: -8971 = record-vs-DESCRIPTOR consistency check (mode-3 differential), 84607 = the strategic door
+- Mode 3 (pure-huge pipeline: descriptor lie + huge record SPS + huge in-band frame SPS) RAN
+  on the device (18 rounds after a 2-day idle, install clean, launch clean, DONE, device alive).
+- MODE-3 DIFFERENTIAL (Tier-0): mode2 and mode3 give the IDENTICAL -8971 despite differing
+  frame content -> the -8971 check ignores the frame; it compares the RECORD's parsed SPS dims
+  (huge) against the DESCRIPTOR's declared dims (512 = the lie). -12909 (mode 1) = a DIFFERENT,
+  deeper check: frame-SPS vs the established (small) config at decode time.
+- FULL WALL MAP on 26.4/23E246 (all Tier-0, 60+ measured rounds):
+  1. client session cap (VTDecompressionSessionCreate dim check on the format) -> -12910 when
+     honest dims. BYPASSED: mode-2/3 descriptor lie, st=0 on all money sizes.
+  2. record-vs-descriptor check -> -8971 (kVTVideoDecoderBadDataErr). NOT YET BYPASSED.
+  3. frame-SPS-vs-config check -> -12909 (malfunction, deeper). NOT bypassed via our routes.
+  The vulnerable multiply (mul w24,w22,w21 + negative-only check, kext diff Tier-0) sits
+  BEHIND check #2/#3.
+- CLOSURE ARGUMENT: 32-bit wrap needs a factor > 65535 (65535^2 = 4,294,836,225 < 2^32), so an
+  in-cap descriptor can never wrap -> the bypass must move the CAP itself or enter separately.
+- STRATEGIC DOOR: CVE-2026-84607 (AVE2 race, "EncType mismatch with session") - fix confirmed
+  ABSENT on 23E246 by our own kext diff. It is a different entry class that bypasses ALL the
+  normal-path consistency checks. Kext lane owns the race material; harness lane (O-D) builds
+  the trigger harness on request.
+- Lever booked now (my lane): measure the client cap trip-point (sane dims ladder mode 0) to
+  bound check #1 exactly - it defines the descriptor空间的 usable range for any future bypass.
