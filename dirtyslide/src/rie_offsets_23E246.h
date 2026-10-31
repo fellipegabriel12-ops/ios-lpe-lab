@@ -74,3 +74,45 @@ struct stage2_ctx {
 };
 
 #endif /* RIE_OFFSETS_23E246_H */
+/*
+ * rie_offsets_23E246.h — SEMANTIC ANCHORS (O-D, Tier-1 source-level).
+ *
+ * Values stay 0 until a kcache pattern-scan fills them — this file documents
+ * WHERE to look: the exact field declarations in the PUBLISHED xnu-12377.1.9
+ * (github.com/apple-oss-distributions/xnu, tag xnu-12377.1.9, files fetched to
+ * Updates workspace: thread.h / proc_internal.h / ucred.h / pipe.h).
+ *
+ * FIELD ANCHORS (file:line from the tag checkout):
+ *   thread.h:488   thread_continue_t  continuation;   /* continue here next dispatch */
+ *   thread.h:489   void              *parameter;     /* continuation parameter */
+ *   thread.h:385   struct thread {   <- the struct decl
+ *   proc_internal.h:271  struct proc {              <- the struct decl
+ *   proc_internal.h:290  pid_t  p_pid;              /* THROUGH smrq / LIST_NOTE: this
+ *       line sits in the 26.4-era struct proc (the modern one); lines 647/699 are
+ *       the LEGACY pack(virtual) structs — do NOT use them */
+ *   proc_internal.h:277  proc_ro_t p_proc_ro;       <- PPL-protected read-only proc root
+ *   ucred.h:146   struct ucred {
+ *   ucred.h:153   u_long  cr_ref;                            <- reference count
+ *   ucred.h:160   uid_t   cr_uid;   (effective)
+ *   ucred.h:161   uid_t   cr_ruid;  (real)
+ *   ucred.h:171   int     cr_flags;                          <- flags on credential
+ *   pipe.h:155    struct pipe {
+ *   pipe.h:102    struct pipebuf {                       <- the buffer substruct
+ *   pipe.h:163    u_int  pipe_state;
+ *
+ * RESOLUTION ORDER (per the operation's rules):
+ *   1. kcache 23E246 (iPhone17,3, on disk at
+ *      G:\op lab\iphone-control\jailbreak\kcache-26.4\23E246__iPhone17,3\)
+ *      through the XPF/ChOma PatchFinder stack (G:\op lab\Dopamine\BaseBin) —
+ *      Tier-0.
+ *   2. xnu-12377.1.9 source = the semantic anchor for what each pattern must
+ *      match (field order, struct group macro nesting, XNU_PTRAUTH_SIGNED_PTR
+ *      fields = PAC-signed pointers — the machine code shows the sign/auth
+ *      instructions at those accesses).
+ *   3. never hand-arithmetic offsets: the _PROC_HAS_SCHEDINFO_ / CONFIG_* /
+ *      _XNU_STRUCT_GROUP_ macros make field order conditional — arm64 build
+ *      flags decide which branches exist. RTFM = the kext binary.
+ *
+ * AVE2/AVD note: the offsets contract is xtended by ave2_wire.h (the 64747
+ * wire layout) and tools/o_c_aved_hunt.py (the AVD census which runs offline).
+ */
