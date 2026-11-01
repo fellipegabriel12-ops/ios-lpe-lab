@@ -1325,3 +1325,21 @@ EOF_MARKER_UNUSED
   with the CG86950 probe: our ImageIO/PDF-route = the SAME CG-pipeline entry, the crafted
   file = input only).
 
+
+## 2026-11-01 ~15:12Z O-D - THE REAL STAGE-A LANE: the CVE-112611-class = two levels deeper than the armory receipts (the stack VLA write analysis)
+- The writeups class (Proven both-side): CVE-112611 = the crashing /Function path
+  = the exact value-mapped R cadence class; AND the type-4 PS-calculator note =
+  "a type-4 with a longer /Range deepens the write arbitrarily" = the splice from
+  "R=136, value=1.0" to "R = N, values = OUR-CHOSEN DOUBLES" = the attacker writes
+  SERIES of chosen doubles, up the draw frame = the CGFunctionEvaluate path semantics.
+- THE CLASS CHANGE: 100% inside CoreGraphics PDF stack - no kext, no AVE2, no
+  VideoToolbox. A pure stage-A owned by the CG family. The 23E246 = in-band.
+- The armory receipts = crash-only (the 1.0 oracle); the FULL
+  "CGFunctionEvaluate write-value mapping" = a type-4 /Range*Deep class = the next
+  work: our own type-4 crafted PDF = the SECOND file class = the loop-length +
+  value-ladder control = the building block for the true chain: (a) the stack-write
+  length, (b) the value-ladder = the functional primitive.
+- The pre-existing receipts = exactly the "deepens arbitrarily" note = our work =
+  choose (R, values) = the interplay of the stage-A = the first PDF-craft class
+  = the draft harness = ours.
+
