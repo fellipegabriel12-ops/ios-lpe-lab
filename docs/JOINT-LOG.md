@@ -1301,3 +1301,27 @@ EOF_MARKER_UNUSED
 - The stage-A = V0: the VM boots = us = the mission's T-0 test bed
   (= our own kernelcache = the target-cache on disk).
 
+
+## 2026-11-01 ~15:05Z O-D - GOLD FROM THE ARMORY: CVE-2026-112611 (CoreGraphics PDF type-5 shading OOB write) vs. our 23E246
+- CVE record reads: affected = BEFORE 26.7.2 AND BEFORE 27.2. Our 26.4 (23E246) = in-band
+  = STILL LIVE (T-0 by record; on-device proof = the class already repro'd on the 27.0
+  unpatched machine = ours as well by the same code family).
+- APPLE'S CVE CLASS: "Processing a maliciously crafted PDF file may lead to memory
+  corruption" = the OOB write class where the CVE's own writeup proves the attacker
+  CHOOSES THE WRITTEN VALUE (the 0x3ff000000000001c fingerprint = the double the PDF
+  chose + idx*16 + 0xc) = the *value-controlled OOB write class* = the same shape the
+  operation's whole 26.x stage-A was hunting.
+- PAYLOAD: the armory PoC = a 7-object, 2KB crafted PDF (R=136 vs nc=1, C0/C1 all 1.0),
+  fired at ANY PDF RENDER PATH (Preview class = CGPDFScannerScan -> op_sh ->
+  CGShadingDrawInContextDelegate -> the culprit CGFunctionEvaluate per-vertex on a
+  stack-VLA record of only (nc=1) vs the Function's (R=136) outputs).
+- WHERE WE HAVE IT: the PoC files already generated to dirtyslide/test_payloads/
+  (crash + the benign control); the CG86950 and cgshading own-artifact-class = the ARMORY's
+  own already-present sibling line (the CVE-2026-112611-cg-shading repo).
+- THE SIMPLEST EDGE IT CHANGES: the 26.x/27.x-BAND OOB = our stage-A's known-good class =
+  a confirmed value-controlled CG OOB-write with the *stack control* class = the exact
+  level of control that makes a stage-A impact-led bypass of 27.x work.
+- STATUS: payloads ready. FIRE = the probe builds as the next harness (combined already
+  with the CG86950 probe: our ImageIO/PDF-route = the SAME CG-pipeline entry, the crafted
+  file = input only).
+
