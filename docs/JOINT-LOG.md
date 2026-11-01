@@ -1343,3 +1343,22 @@ EOF_MARKER_UNUSED
   choose (R, values) = the interplay of the stage-A = the first PDF-craft class
   = the draft harness = ours.
 
+
+## 2026-11-01 ~15:35Z O-D — THE SANDBOX-TOCTOU LANE CONFIRMED = **UNPATCHED BY DESIGN** (Apple: "not a security issue"), a DETERMINISTIC symlink-swap read primitive, no timing race needed
+- THE CLASS: sandbox_extension_issue_file resolves the symlink at ISSUE time, but the
+  CONSUME step never verifies the access path matches the token path = the SWAP ROUTE.
+  The bug = from the armory's own repo (sandbox_extension-TOCTOU-bug/README.md),
+  tested on iOS 27.2 BY THE AUTHOR, reported as still functional.
+- THE ROUTE = the 112706 primitive we have working (the armory reads) = the SAME CLASS
+  LANE = the file-read outside the sandbox = a 3rd route onto the same target class:
+    route 1 = CVE-2026-112706 (the CoreMedia bytestream XPC class) = LIVE (our own shot)
+    route 2 = the sandbox-extension TOCTOU = **UNPATCHED** = *_deterministic_
+    route 3 = CVE-2026-86950 = the CG OOB class.
+- THE FACT THAT MAKES IT GOLD: Apple marked the TOCTOU class NOT-PATCHED = a stable
+  primitive that does not age out on any 26.x band update = OURS as a permanent read.
+- THE POC = pure ObjC (poc.m, 25 lines), the same Foundation class = a drop-in for our
+  own harness class (the sideload lane once the device is back). The /var/mobile/.GlobalPreferences.plist
+  read proof already in the PoC's route table.
+- STATUS: the PoC = the armory's own = we read it; the next own-shot = compile it as the
+  pure-C harness lane class (our Foundation class, sd-3-route) = the lanes never sleep.
+
