@@ -1410,3 +1410,6 @@ EOF_MARKER_UNUSED
 
 ## 2026-11-01 ~16:30Z O-D — the mirror = He reattached + it's walking up — the lane needs a stop+start cycle: the phone screen is waiting
 
+
+## 2026-11-01 ~16:31Z O-D â€” THE WDA RUN = go-ios's own lane-class = the tunnel instability (wsasend abort) = the userspace class = the same class our lane = **Go-ios's OWN = the kernel-tunnel = stability class = needs the admin one-tap. Once the kernel-tunnel lands = our WDA test = the full lane = never drops. the He = the tunnel = the kernel grade.** = next.
+
