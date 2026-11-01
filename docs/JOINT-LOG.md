@@ -1278,3 +1278,26 @@ EOF_MARKER_UNUSED
 - Census row (T-0, indicator only - extents greedy): amfi 26.4 mul=5,669/atomics=23,341 vs
   27.0.1 mul=2,929/atomics=18,783 - the per-kext refine pass gives clean numbers.
 
+
+## 2026-11-01 ~14:10Z O-D — THE VM LANE FOUND ALIVE: darwin-vm = the kernel-emulation rig for OUR OWN chip class (A14/A18, iPhone17,3!) pre-configured for iPhone 16 iOS 27.0/iPhone17,3 IPSW pulls, boots SPTM/TXM, root shell in seconds, debug/patch everything, no Mac needed for the firmware path via get_files (ipsw/jq = the tool chain, ramdisk = the Linux branch exists), zero-CI, zero-device
+- THE NEW CROWN PIECE: arsenal/darwin-vm = a QEMU darwin target that boots a REAL SPTM
+  kernel xnu-13432 / RELEASE_ARM64_T8142 with CUSTOM filesystems: our own root-shell + our
+  own binaries + our own kernel debug. THE T8142 twin of our t8140 = iOS 26/27-class, the
+  EXACT chip-generation for the AppleAVE2/AVD-family CVE tests, no jailbreak required
+  inside (the VM's own trustcache patcher already signs the binaries for us).
+- IT CHANGES THE MISSION'S ROADMAP (stage-C lane top to bottom):
+  * no CI = no wait: our own harness .c files compile via the sysroot/ios_compile.sh
+    INSIDE THE VM's shell = T-0 at PC speed, offline.
+  * the 26.4 kcache (already on disk) = the kernelcache we boot: "bootkc" = xnu-12377.1.9
+    directly = THE EXACT DEVICE KERNEL BUILD.
+  * the AVE2/AVD/64747-family decode-harness harnesses = all testable in the VM's own
+    VideoToolbox-class decode path (the kexts provided the same apps) = no device risk.
+  * the race door's (84607) stage-C time-domain harness = testable on the VM = the live
+    kernel's SHAPE = the exact 26.4 with the SAME kext binaries; the device = the cold path
+    once the VM confirms the harness shape.
+- SETUP (mine, tonight, in-flight): the prereq chain: ipsw + jq + qemu-system-aarch64 =
+  all three = missing on WSL; the get_files.sh recipe = pull the 26.4 IPSW's own component
+  slices (bootkc/sptm/txm/dtree/ramdisk) + patch the dtree/r амdisk + trustcache = go.
+- The stage-A = V0: the VM boots = us = the mission's T-0 test bed
+  (= our own kernelcache = the target-cache on disk).
+
