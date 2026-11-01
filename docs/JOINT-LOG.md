@@ -1407,3 +1407,6 @@ EOF_MARKER_UNUSED
   primitive lane (the BEHIND-sandbox read); (c) the stage-A = the crafted payload class.
 - UNVERIFIED: the 2FA class = already ran fine - we did not break our own isideload token.
 
+
+## 2026-11-01 ~16:30Z O-D — the mirror = He reattached + it's walking up — the lane needs a stop+start cycle: the phone screen is waiting
+
