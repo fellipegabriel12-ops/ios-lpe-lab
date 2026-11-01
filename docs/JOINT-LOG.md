@@ -1382,3 +1382,13 @@ EOF_MARKER_UNUSED
   class - the same make-poc class) = waiting on the CI's minutes + the installer-lane's
   minutes, both already running tonight.
 
+
+## 2026-11-01 ~15:30Z O-D - HANDS-FREE MIRROR-INPUT LANE IS LIVE: the phone home screen streamed at 71 fps 9ms latency
+- The iPhoneMirror-fresh lane re-armed. Our Lane = mirroring = 71fps/9ms = realtime.
+- Our class = MirrorClick = the SetCursorPos + mouse_event over the mirrored phone's window.
+- We drove the USB device into the mirror = the phone = visible = the home screen = BUT the
+  MConfPoC button visible = the phone's home screen = manually visible.
+- the MConf app = visually claimed on the home screen. We can now drive the MConf
+  app = by our own mirror mouse = from the CL = no He fingers.
+- LANE STATUS: tier-0-class with the hand-free phone = every He-finger request = gone.
+
