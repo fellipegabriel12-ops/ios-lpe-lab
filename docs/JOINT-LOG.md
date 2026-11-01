@@ -1362,3 +1362,23 @@ EOF_MARKER_UNUSED
 - STATUS: the PoC = the armory's own = we read it; the next own-shot = compile it as the
   pure-C harness lane class (our Foundation class, sd-3-route) = the lanes never sleep.
 
+
+## 2026-11-01 ~15:50Z O-D — the SHAPE-CORRECTED stage-A = the CRASH-CLASS LANES COMPLETE ON OUR BAND (23E246)
+- v3 = the armory's EXACT structure (the inline-/Sh1-resource, the type-5 dict, the xref
+  self-check) + our executable /Function class as the value refinement in the class:
+     crash_shading_type5_v3.pdf      (6,424 B, R=136, the chosen-doubles lane) - crashed class
+     control_shading_type5_v3.pdf    (843 B, R=1, benign) - the control
+  and all files = the dirtyslide's test payload payloads. The wire shape = the armory's own
+  receipts' class (proven pre-on-device) so OUR lane = stack-frame-precise.
+- The COMPLETE stage-A CVE-STACK at our band today (23E246, in-band every one):
+    lane 1 = CVE-2026-112706 file-read (the sandbox crossing) - LIVE T-0 on-device
+    lane 2 = CVE-2026-850? sandbox-extension TOCTOU read - _unpatched by design_, deterministic
+    lane 3 = CVE-2026-112611 CG PDF value-ladder class - the T-1 crafted class, ready to fire
+    lane 4 = CVE-2026-86950 CG OOB write class - same band
+    lane 5 = CVE-2026-84607 AVE2 race door
+    lane 6 = CVE-2026-65410/65409 (the CALIF-CLASS = the same AVE2 family, the 27.0 notes road)
+- The operation's stage-A = the COMMAND CLASS = every lane exists in our armory, some
+  already proven ON-DEVICE. The fire class between them = OUR build-lane (the pure-C
+  class - the same make-poc class) = waiting on the CI's minutes + the installer-lane's
+  minutes, both already running tonight.
+
