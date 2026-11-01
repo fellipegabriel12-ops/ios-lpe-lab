@@ -1260,3 +1260,21 @@ EOF_MARKER_UNUSED
 - Our own T-0s unchanged: 112706 file-read live on 26.4 (shots pending on the /usr/libexec
   dir-list; run.log = writing); 84607 race open; AVE2 gate map full; HEVC probe ready.
 
+
+## 2026-11-01 ~12:45Z O-D - WALL RE: amfi + sandbox carved from BOTH kcache bands (stage-E basis acquired)
+- tools/o_c_wall_re.py = the wall-pair carver (MH_KEXT_BUNDLE match on the first-4k strings):
+  - 26.4: amfi 71.3MB / AppleMobileFileIntegrity 66.8MB / sandbox 61.9MB
+  - 27.0.1: the comparison pair carved the same way
+  - marker census per version: trustcache / TrustCache / cs_kill / csflags / SIGKILL /
+    seatbelt / iokit-user-client-class all present (the whole restriction family lives in
+    these neighborhoods) - blobs + markers under kexts/<band>/<name>/
+- KNOWN LIMIT (queued, mine): the extent walk = neighbor-greedy (the blobs include adjacent
+  kext ranges - the raw string diff nois). The refined pass = exact per-kext LC-extent bound
+  (the MIG identifier strings) for the needle diff = the next-op work.
+- WHY IT MATTERS: stage E ("sandbox patch", kirby doing the 27.0.x one publicly) = exactly
+  this wall. With the blobs on disk + the comparison pair, the ADDED-CHECKS diff (surgical)
+  tells us everything new Apple hardened when moving up-band = the bypass surface shape for
+  23E246. Also carve-appleaoAIM-compatible with the o_c_kext_fleet tooling.
+- Census row (T-0, indicator only - extents greedy): amfi 26.4 mul=5,669/atomics=23,341 vs
+  27.0.1 mul=2,929/atomics=18,783 - the per-kext refine pass gives clean numbers.
+
