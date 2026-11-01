@@ -1240,3 +1240,23 @@ EOF_MARKER_UNUSED
   and pick binaries at will through the same one-liner flow.
 - The hunt v3 (Q3 multiply census) runs; HEVC probe waiting-roomed; CVE-84607 race
   confirmed open from the census. THE CHAIN'S SANDBOX LANE IS NO LONGER EMPTY.
+
+## 2026-11-01 ~12:30Z O-D - SCENE WAVE DAY: kernel r/w publicly claimed on 27.0-27.0.1 (kirby_swiftios, with photos); root shots circulating (Din3zh/Silzee); Calif hash-drop
+- kirby_swiftios (42K views): "KASLR bypass, STABLE KERNEL R/W - working on sandbox patch and the rest,
+  no PoC yet, prefer dropping a clean jailbreak over raw primitives" = the stage-C/D CORE
+  publicly claimed for the 27.0.x band WITH proof images (Tier-3 until the tool drops, the
+  photos look real; KASLR typo acknowledged).
+- Din3zh/Silzee: "Back to ROOT! iOS 27.0.1" screenshots - the band falling in public.
+- Calif posted a bare SHA-256 (no explanation): the proof-of-possession pattern; engagement-bait
+  accusation also live. Recorded, weight = T-3.
+- READ FOR OUR TARGET: 26.4 = PRE every fix wave that 27.0.x still shares; kirby's kr/w chain,
+  whatever its exact bug, lands our probability way UP (the mission plan's stage-C/D upstream
+  may get a public shortcut BEFORE we finish our own private build).
+- THE OPERATIONAL RULE THIS TRIGGERS (per the plan's kill-switch H3 analysis): keep building
+  our private chain regardless (the board holds the plan); watch kirby for (a) the bug class
+  (if published and 26.4-surviving = a NEW primitive shelf for the private build); (b) the
+  sandbox-patch mechanics (our stage E/F borrow). The L1B3RT4S-style mirror of any drop =
+  day-0.
+- Our own T-0s unchanged: 112706 file-read live on 26.4 (shots pending on the /usr/libexec
+  dir-list; run.log = writing); 84607 race open; AVE2 gate map full; HEVC probe ready.
+
