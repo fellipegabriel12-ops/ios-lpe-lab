@@ -1,0 +1,1 @@
+./build-ios.sh: line 481: clang -arch arm64 -isysroot /Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk -miphoneos-version-min=16.0 -O0 -g -Wall -fno-stack-protector -Wl,-ld_classic: No such file or directory
