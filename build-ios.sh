@@ -499,10 +499,7 @@ if [ -f "$APP16/CG86950" ]; then
     echo "[+] crafted payload files staged into CG86950.app bundle"
   fi
 else
-  echo "[!] CG86950 failed to compile (exit=$CGERR — the stderr shown above)"
-else
-  echo "[!] CG86950 failed to compile - continuing without it"
-  rm -f "$APP16/CG86950"
+  echo "[!] CG86950 failed to compile (exit=$CGERR - the stderr shown above)"
 fi
 cat > "$APP16/Info.plist" <<PLIST16
 <?xml version="1.0" encoding="UTF-8"?>
