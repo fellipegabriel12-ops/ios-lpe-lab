@@ -1,0 +1,35 @@
+name: build86950
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: build CG86950
+        run: |
+          set -e
+          which clang >/dev/null
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          CC="clang -arch arm64 -isysroot $SDK -miphoneos-version-min=16.0 -O0 -g -Wno-implicit-function-declaration"
+          mkdir -p dist5/CG86950.app
+          $CC -o dist5/CG86950.app/CG86950 cg86950_pure.c \
+            -framework CoreGraphics -framework ImageIO -framework CoreFoundation 2>&1 | tee cg86950.log
+          test -f dist5/CG86950.app/CG86950 && echo "[+] built CG86950" || echo "[!] CG86950 missing"
+          cat cg86950.log || true
+      - name: show log
+        if: always()
+        run: cat cg86950.log || true
+      - name: commit artifacts back
+        if: always()
+        run: |
+          set -e
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git checkout --orphan "build-cg86950-${{ github.run_id }}"
+          git rm -r --cached . >/dev/null 2>&1 || true
+          git add -f dist5 cg86950.log
+          git commit -m "cg86950 build"
+          git push --force origin "HEAD:build-cg86950-${{ github.run_id }}"
