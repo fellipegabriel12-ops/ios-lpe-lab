@@ -1,0 +1,42 @@
+name: build-ios-lpe
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: build
+        run: |
+          chmod +x build-ios.sh
+          ./build-ios.sh
+      - name: show offsets
+        run: cat probe_off.h trig_off.h || true
+      - name: commit artifacts back to the repo
+        run: |
+          set -e
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          # orphan branch: the GITHUB_TOKEN cannot push changes under .github/workflows
+          # (GitHub rejects the push if the pushed range touches a workflow file)
+          git checkout --orphan "build-${{ github.run_id }}"
+          git rm -r --cached . >/dev/null 2>&1 || true
+          git add -f dist dist2 dist3 dist4 dist5 probe_off.h trig_off.h
+          git commit -m "build: LPE.ipa + binaries"
+          git push --force origin "HEAD:build-${{ github.run_id }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-lpe
+          path: |
+            dist/LPE.ipa
+            dist2/LPE2.ipa
+            dist3/VT3.ipa
+            dist4/AVEPOC.ipa
+            dist5/VT4.ipa
+            dist/Payload/LPE.app/LPE
+            dist/Payload/LPE.app/libchild.dylib
+            probe_off.h
+            trig_off.h
