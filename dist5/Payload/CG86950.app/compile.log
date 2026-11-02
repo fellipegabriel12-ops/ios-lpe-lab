@@ -1,0 +1,16 @@
+cg86950_pure.c:110:13: error: call to undeclared function 'file_copy'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+            file_copy(src, dst);
+            ^
+cg86950_pure.c:88:11: warning: unused variable 'appDirFile' [-Wunused-variable]
+    char *appDirFile = NULL;
+          ^
+cg86950_pure.c:116:12: error: static declaration of 'file_copy' follows non-static declaration
+static int file_copy(const char *src, const char *dst)
+           ^
+cg86950_pure.c:110:13: note: previous implicit declaration is here
+            file_copy(src, dst);
+            ^
+cg86950_pure.c:224:18: warning: unused variable 'big' [-Wunused-variable]
+    const size_t big = 1u << 30;   /* one gigabyte row-space» the OOB-write shape */
+                 ^
+2 warnings and 2 errors generated.

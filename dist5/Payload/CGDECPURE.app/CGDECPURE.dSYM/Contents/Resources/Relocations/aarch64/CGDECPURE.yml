@@ -1,0 +1,12 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'dist5/Payload/CGDECPURE.app/CGDECPURE'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x10000721C, symSize: 0x598 }
+  - { offsetInCU: 0x4D, offset: 0x4D, size: 0x8, addend: 0x0, symName: _g_report, symObjAddr: 0x3170, symBinAddr: 0x10000C000, symSize: 0x0 }
+  - { offsetInCU: 0x283, offset: 0x283, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x10000721C, symSize: 0x598 }
+  - { offsetInCU: 0x3B8, offset: 0x3B8, size: 0x8, addend: 0x0, symName: _report_open, symObjAddr: 0x598, symBinAddr: 0x1000077B4, symSize: 0x194 }
+  - { offsetInCU: 0x415, offset: 0x415, size: 0x8, addend: 0x0, symName: _rline, symObjAddr: 0x72C, symBinAddr: 0x100007948, symSize: 0x6C }
+  - { offsetInCU: 0x439, offset: 0x439, size: 0x8, addend: 0x0, symName: _file_copy, symObjAddr: 0x798, symBinAddr: 0x1000079B4, symSize: 0x13C }
+  - { offsetInCU: 0x4A7, offset: 0x4A7, size: 0x8, addend: 0x0, symName: _rlinef, symObjAddr: 0x8D4, symBinAddr: 0x100007AF0, symSize: 0x58 }
+...
