@@ -474,56 +474,29 @@ zip -q -r -X VTDECHEVCPURE.ipa Payload/VTDECHEVCPURE.app
 cd ..
 echo "[+] built dist5/VTDECHEVCPURE.ipa"
 
-# ---- CG86950 (O-D) - the stage-A CG probe ----------------------------------------
-# The CVE-2026-86950 / CVE-2026-112611 combined harness. Both CG-classes live on
-# our 26.4 build (record-confirmed). Fires:
-#   (a) the PDF branch (the 112611 proven route: CGPDFScannerScan -> op_sh ->
-#       the crafted /Function type-4 value-ladder class),
-#   (b) the ImageIO branch (the 86950 crafted-image class: the full decoder + the
-#       blog photo-thumbnail route).
-# And stages the crafted files from the app bundle into Documents first (the
-# app = the container reuses com.lab.lpe; the payload = a test_shading x 2).
+# ---- CG86950 (O-D) - the stage-A CG probe (the set+e-contained class) --------
 APP16="dist5/Payload/CG86950.app"
 mkdir -p "$APP16"
-COMPILE_ERR=""
-$CC -o "$APP16/CG86950" cg86950_pure.c \
-    -framework CoreGraphics -framework ImageIO -framework CoreFoundation || CGERR=$?
+set +e
+"$CC" -o "$APP16/CG86950" cg86950_pure.c \
+    -framework CoreGraphics -framework ImageIO -framework CoreFoundation \
+    2> "$APP16/compile.log"
+set -e
 if [ -f "$APP16/CG86950" ]; then
-  echo "[+] CG86950 compiled (pure C, no Foundation)"
-  if [ -f dirtyslide/test_payloads/crash_shading_type5_v2.pdf ]; then
-    cp dirtyslide/test_payloads/crash_shading_type5_v2.pdf "$APP16/payload_crash_type5_v2.pdf"
-    cp dirtyslide/test_payloads/control_shading_type5_v2.pdf "$APP16/payload_control_type5_v2.pdf"
-    cp dirtyslide/test_payloads/crash_shading_type5.pdf "$APP16/payload_crash_type5.pdf"
-    cp dirtyslide/test_payloads/trigger.pdf "$APP16/payload_trigger_cg.pdf" 2>/dev/null || true
-    cp dirtyslide/test_payloads/trigger.ttf "$APP16/payload_trigger.ttf" 2>/dev/null || true
-    echo "[+] crafted payload files staged into CG86950.app bundle"
-  fi
+  echo "[+] CG86950 compiled"
+  cp dirtyslide/test_payloads/crash_shading_type5_v2.pdf "$APP16/payload_crash_type5_v2.pdf" 2>/dev/null
+  cp dirtyslide/test_payloads/control_shading_type5_v2.pdf "$APP16/payload_control_type5_v2.pdf" 2>/dev/null
+  cp dirtyslide/test_payloads/crash_shading_type5.pdf "$APP16/payload_crash_type5.pdf" 2>/dev/null
+  cp dirtyslide/test_payloads/trigger.pdf "$APP16/payload_trigger_cg.pdf" 2>/dev/null
+  cp dirtyslide/test_payloads/trigger.ttf "$APP16/payload_trigger.ttf" 2>/dev/null
+  echo "[+] crafted payloads staged"
 else
-  echo "[!] CG86950 failed to compile (exit=$CGERR - the stderr shown above)"
+  echo "[!] CG86950 FAILED:"
+  cat "$APP16/compile.log"
 fi
-cat > "$APP16/Info.plist" <<PLIST16
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>CFBundleExecutable</key><string>CG86950</string>
-  <key>CFBundleIdentifier</key><string>com.lab.lpe</string>
-  <key>CFBundleName</key><string>CG86950</string>
-  <key>CFBundleVersion</key><string>1.0</string>
-  <key>CFBundleShortVersionString</key><string>1.0</string>
-  <key>CFBundlePackageType</key><string>APPL</string>
-  <key>LSRequiresIPhoneOS</key><true/>
-  <key>MinimumOSVersion</key><string>16.0</string>
-  <key>UIDeviceFamily</key><array><integer>1</integer></array>
-  <key>UILaunchScreen</key><dict/>
-</dict>
-</plist>
-PLIST16
-codesign -s - --force "$APP16/CG86950" 2>/dev/null || true
 rm -f dist5/CG86950.ipa
 cd dist5
 zip -q -r -X CG86950.ipa Payload/CG86950.app
 cd ..
 echo "[+] built dist5/CG86950.ipa"
 
-set -x; echo CG86950 log:; set +x
