@@ -1,0 +1,10 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'dist5/Payload/CG86950.app/CG86950'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100007070, symSize: 0x2F8 }
+  - { offsetInCU: 0x5A, offset: 0x5A, size: 0x8, addend: 0x0, symName: _g_report, symObjAddr: 0x52B0, symBinAddr: 0x10000C000, symSize: 0x0 }
+  - { offsetInCU: 0x3B3, offset: 0x3B3, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100007070, symSize: 0x2F8 }
+  - { offsetInCU: 0x757, offset: 0x757, size: 0x8, addend: 0x0, symName: _rlinef, symObjAddr: 0x2F8, symBinAddr: 0x100007368, symSize: 0x6C }
+  - { offsetInCU: 0x7C4, offset: 0x7C4, size: 0x8, addend: 0x0, symName: _fire_round, symObjAddr: 0x364, symBinAddr: 0x1000073D4, symSize: 0x4C0 }
+...
