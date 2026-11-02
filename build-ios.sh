@@ -486,7 +486,7 @@ echo "[+] built dist5/VTDECHEVCPURE.ipa"
 APP16="dist5/Payload/CG86950.app"
 mkdir -p "$APP16"
 COMPILE_ERR=""
-$CC -O2 -g -o "$APP16/CG86950" cg86950_pure.c \
+$CC -o "$APP16/CG86950" cg86950_pure.c \
     -framework CoreGraphics -framework ImageIO -framework CoreFoundation || CGERR=$?
 if [ -f "$APP16/CG86950" ]; then
   echo "[+] CG86950 compiled (pure C, no Foundation)"
