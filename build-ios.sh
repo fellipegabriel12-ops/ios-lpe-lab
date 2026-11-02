@@ -485,8 +485,13 @@ echo "[+] built dist5/VTDECHEVCPURE.ipa"
 # app = the container reuses com.lab.lpe; the payload = a test_shading x 2).
 APP16="dist5/Payload/CG86950.app"
 mkdir -p "$APP16"
-if $CC -O2 -g -o "$APP16/CG86950" cg86950_pure.c \
-    -framework CoreGraphics -framework ImageIO -framework CoreFoundation; then
+COMPILE_ERR=""
+if ! CGERR=$($CC -O2 -g -o "$APP16/CG86950" cg86950_pure.c \
+    -framework CoreGraphics -framework ImageIO -framework CoreFoundation 2>&1); then
+  echo "[!] CG86950 failed to compile. error: $CGERR"
+  printf '%s\n' "$CGERR" > "$APP16/COMPILE_ERR.txt"
+  rm -f "$APP16/CG86950"
+else
   echo "[+] CG86950 compiled (pure C, no Foundation)"
   if [ -f dirtyslide/test_payloads/crash_shading_type5_v2.pdf ]; then
     cp dirtyslide/test_payloads/crash_shading_type5_v2.pdf "$APP16/payload_crash_type5_v2.pdf"
@@ -524,3 +529,5 @@ cd dist5
 zip -q -r -X CG86950.ipa Payload/CG86950.app
 cd ..
 echo "[+] built dist5/CG86950.ipa"
+
+set -x; echo CG86950 log:; set +x
