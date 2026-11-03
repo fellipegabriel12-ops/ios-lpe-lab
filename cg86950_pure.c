@@ -108,7 +108,13 @@ static void stage_payloads(void)
         snprintf(dst, sizeof(dst), "%s/%s", docsDir, *(sp + 1));
         struct stat st;
         if (stat(src, &st) == 0) {
-            file_copy(src, dst);
+            int rc = file_copy(src, dst);
+            rlinef("  stage: %-28s -> %-28s st=%lld rc=%d (%s)",
+                   *sp, *(sp + 1), (long long)st.st_size, rc,
+                   rc == 0 ? "OK" : "COPY-FAILED");
+        } else {
+            rlinef("  stage: %-28s BUNDLE-MISSING (the app's bundle = did not carry it)",
+                   *sp);
         }
     }
     rlinef("staged payload files from the bundle into Documents");
