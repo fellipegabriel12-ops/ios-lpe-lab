@@ -1514,3 +1514,19 @@ EOF_MARKER_UNUSED
   compile with REAL values the moment RIE_OFFSETS_VERIFIED flips to 1 (after one
   on-device class confirms).
 
+
+## 2026-11-03 ~15:20Z O-D — THE WHOLE WORKSPACE SECURED (everything on the board or the artifact branches); the phone is live
+- main = cd9126f+ (the fuzz corpus singles + the pattern-scan class banked)
+- the kexts artifact = branch kexts-carve-26.4 (the AMFI/sandbox blobs = the stage-E RE basis) = pushed as [new branch]
+- the device = connected (00008140-00095109342B001C visible in the go-ios class)
+
+## THE NEXT-STEP LADDER (in order, when the lane is live)
+1. tunnel start --userspace
+2. install CG86950H.ipa (staged at ci-out/dist12, the bundle-id = com.mconf.poc)
+3. DVT launch com.mconf.poc.2BGBD62KA3 (the CG86950 class = the crafted-PDF fire) + pull the report
+4. the kernel-tunnel class = the WDA lane (one UAC yes)
+5. WDA runwda = the full phone-control lane
+6. the /usr/libexec read (the MConf file-read lane) = the offsets ground truth
+7. rie_offsets_23E246.h = flip VERIFIED=1 (Tier-0 after the on-device confirm)
+8. rie_stage2_v3.c = compile with the real values = the kernel-phase class armed
+
