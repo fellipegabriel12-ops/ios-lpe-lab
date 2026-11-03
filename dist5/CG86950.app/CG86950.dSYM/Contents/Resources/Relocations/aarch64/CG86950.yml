@@ -1,0 +1,17 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     'dist5/CG86950.app/CG86950'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100004000, symSize: 0xE8 }
+  - { offsetInCU: 0x41, offset: 0x41, size: 0x8, addend: 0x0, symName: _home_documents, symObjAddr: 0xD9C, symBinAddr: 0x100004D9C, symSize: 0x1A0 }
+  - { offsetInCU: 0x66, offset: 0x66, size: 0x8, addend: 0x0, symName: _home_documents.docs, symObjAddr: 0x4A60, symBinAddr: 0x10000C008, symSize: 0x0 }
+  - { offsetInCU: 0xA5, offset: 0xA5, size: 0x8, addend: 0x0, symName: _g_report, symObjAddr: 0x4A58, symBinAddr: 0x10000C000, symSize: 0x0 }
+  - { offsetInCU: 0x2D5, offset: 0x2D5, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100004000, symSize: 0xE8 }
+  - { offsetInCU: 0x2EF, offset: 0x2EF, size: 0x8, addend: 0x0, symName: _report_open, symObjAddr: 0xE8, symBinAddr: 0x1000040E8, symSize: 0x1C8 }
+  - { offsetInCU: 0x34E, offset: 0x34E, size: 0x8, addend: 0x0, symName: _rlinef, symObjAddr: 0x2B0, symBinAddr: 0x1000042B0, symSize: 0x8C }
+  - { offsetInCU: 0x38F, offset: 0x38F, size: 0x8, addend: 0x0, symName: _stage_payloads, symObjAddr: 0x33C, symBinAddr: 0x10000433C, symSize: 0x324 }
+  - { offsetInCU: 0x4AF, offset: 0x4AF, size: 0x8, addend: 0x0, symName: _fire_round, symObjAddr: 0x660, symBinAddr: 0x100004660, symSize: 0x528 }
+  - { offsetInCU: 0x628, offset: 0x628, size: 0x8, addend: 0x0, symName: _fire_direct_round, symObjAddr: 0xB88, symBinAddr: 0x100004B88, symSize: 0x1A8 }
+  - { offsetInCU: 0x6A0, offset: 0x6A0, size: 0x8, addend: 0x0, symName: _rline, symObjAddr: 0xD30, symBinAddr: 0x100004D30, symSize: 0x6C }
+  - { offsetInCU: 0x6C4, offset: 0x6C4, size: 0x8, addend: 0x0, symName: _file_copy, symObjAddr: 0xF3C, symBinAddr: 0x100004F3C, symSize: 0x178 }
+...
