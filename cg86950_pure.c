@@ -69,11 +69,21 @@ static void rlinef(const char *fmt, ...)
 
 static const char *home_documents(void)
 {
-    static char docs[512];
+    static char docs[1024];
+    /* Class-D: use the cwd (set by the DVT launch = the app's own Documents dir) */
+    char cwd[768];
+    if (getcwd(cwd, sizeof(cwd))) {
+        snprintf(docs, sizeof(docs), "%s", cwd);
+        return docs;
+    }
+    /* Class-B: the getenv class (DVT's CFFIXED_USER_HOME) */
     const char *home = getenv("CFFIXED_USER_HOME");
     if (!home || !*home) home = getenv("HOME");
-    if (!home || !*home) home = "/var/mobile";
-    snprintf(docs, sizeof(docs), "%s/Documents", home);
+    if (home && *home) {
+        snprintf(docs, sizeof(docs), "%s/Documents", home);
+        return docs;
+    }
+    snprintf(docs, sizeof(docs), "/var/mobile");
     return docs;
 }
 
