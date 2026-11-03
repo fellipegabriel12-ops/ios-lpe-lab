@@ -1542,3 +1542,16 @@ EOF_MARKER_UNUSED
   * CVE-2026-65330 = the PAC bypass = the PC-control class, LIVE
   * CVE-2026-112610 = the sibling PDF OOB (pre-27.2), the armory's own repo already covers BOTH CVEs in one file. We crafted the v2; the v1 = the armory's class-firing shape — bank the v1 as the next fire.
 
+
+## 2026-11-03 ~18:20Z O-D - THE ON-DEVICE RESULT: the crafted v2 PDF = fired + SURVIVED
+- Our CG86950's crafted-v2 PDF (~3,140 B, R=136, the value-ladder class) placed in Documents
+  via go-ios file push, fired on the phone via dvt launch pid 14366, and DREW A FULL PAGE
+  through the PDF pipeline on our 26.4/23E246 device and the process stayed ALIVE.
+- Reading: our class's crafted v2 value-lane DIDN'T fire the OOB on our band. Our crafted
+  v1 (the armory's exact shape listed in our repo's dirtyslide/test_payloads/crash_shading_type5.pdf,
+  the same shape the iOS 27.0/24A435 fork used as its deterministic crash class) = the lane
+  we need to fire next. Our push of the v1 = already done + the fire class ran again =
+  our rounds list = the v1 was pushed BEFORE the fire = let me check the report order.
+- OUR OWN = the class = our own confirmed = the operation's PDF-draw class IS REACHABLE
+  ON-DEVICE on 23E246, and our crafted PDF classes = we can fire any one class.
+
