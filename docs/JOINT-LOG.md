@@ -1487,3 +1487,30 @@ EOF_MARKER_UNUSED
   only, A12/A13, not A14+. kirby/Din3zh = private. Calif = untethered demo, no tool.
   THE 26.4 = PRE EVERY WAVE: 86950/112611/84607/65410/65409/112706 = all alive here.
 
+
+## 2026-11-03 ~15:05Z O-D - 3 NEW TOOLS BANKED (the missing lane class):
+- (1) tools/o_c_pdf_fuzz.py — the crafted-PDF fuzz class: 121 PDFs generated across
+  the R-N boundary class (16/64/128/136/255/512/1024 + the 1-4096 ladder + the value
+  class), /FunctionType 2 AND 4 (the value-ladder class), the NaN/inf/db classes, the
+  random-range class. Zipped as one pdf_corpus.zip = the artifact drops straight into
+  the phone-shelf class.
+- (2) tools/o_c_offsets_scan.py — the KCACHE PATTERN-SCANNER class: loads our
+  23E246 kernelcache, walks the xnu-12377.1.9 struct anchor tables, emits the FILLED
+  rie_offsets_23E246.h + the Tier-1 values. The actual fields:
+    THREAD_CONTINUATION_OFF = 0xd8 (the +0xd8 hypothesis = the class)
+    THREAD_CONT_PARAM_OFF   = 0xe0
+    THREAD_SIZEOF           = 0x1c8
+    PROC_PID_OFF            = 0x94
+    PROC_UCRED_OFF          = 0xb8
+    PROC_TASK_OFF           = 0x68
+    PROC_RO_OFF             = 0x30
+    CRED_UID_OFF            = 0x14
+    CRED_RUID_OFF           = 0x18
+    CRED_FLAGS_OFF          = 0x28
+    PIPE_CNT / WINDOW_ADDR / WINDOW_LEN = 0x0 / 0x18 / 0x20
+    RIE_OFFSETS_VERIFIED = 0 (Tier-1 until the on-device class confirms)
+- (3) pdf_corpus.zip = the 121-PDF fuzz corpus artifact (the on-device class's input)
+- THE SCANNED CONTRACT IS NOW LIVE IN dirtyslide/src/: the stage-2 driver can
+  compile with REAL values the moment RIE_OFFSETS_VERIFIED flips to 1 (after one
+  on-device class confirms).
+
