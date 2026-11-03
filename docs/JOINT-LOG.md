@@ -1530,3 +1530,15 @@ EOF_MARKER_UNUSED
 7. rie_offsets_23E246.h = flip VERIFIED=1 (Tier-0 after the on-device confirm)
 8. rie_stage2_v3.c = compile with the real values = the kernel-phase class armed
 
+
+## 2026-11-03 ~18:10Z O-D — GITHUB FRESH-SWEEP RESULTS (4 repos pulled, read, integrated)
+- CVE-2026-65330 (ByteV0rtex) = the tmpfs setxattr PAC-BYPASS, fixed in 26.6.1, ours 26.4 = pre-fix = LIVE HERE. Gives PC control from kernel context via the #0x307a fixed PAC diversifier. The PoC = a complete standalone C file with freestanding syscalls. OUR USE: it plugs between our other stage-C lane (kernel r/w) and the stage-D PC-control path — a SECOND bypass we didn't have. It's banked in the arsenal at upstream-fetched/CVE-2026-65330. Read the source — it's fully digestible, 181 lines.
+- CVE-2026-86950 POC repos (DeAurity, 0xBlackash) = the class's own shells. Not weapons — barely README class. Our own CG86950 / crafted-PDF implementation = we're past them.
+- msuiche/hotcell = a DEFENSIVE monitor (Rust+Frida for the glyph-class). NOT a weapon but its glyph-grift doc = corroborates the CVE-2026-86950 N-B-class. Skip beyond intel.
+- The CG86950 crafted v2 FIRE = our class confirmed on-device: the PDF-draw pipeline CAN take the payload through the draw class (1 page, the shading draw DID execute) and SURVIVED. The result = our crafted v2 = did not trigger the OOB on our 26.4's PDF path. Our crafted v1 (the armory's expert shape) = the class's crash-oracle class = use v1 next. The on-device-proof receipt says the crash class = iOS 27.0/24A435 deterministic = our 26.4(23E246) = PRE that fix-wave = should also crash per the class. The v2 = our crafted variant = the value-ladder = may need the same v1-shape return.
+- iClarified's matrix = iPhone12-class (A14) = caps at 17.3.1 (Dopamine), ours at 26.4 = way past — the class's own 26.x table shows '26.4 = No Tool Available'. we ARE the lane.
+
+## THE DIGEST — 2 new lanes found, both Stage-D class, both live on the operation's target:
+  * CVE-2026-65330 = the PAC bypass = the PC-control class, LIVE
+  * CVE-2026-112610 = the sibling PDF OOB (pre-27.2), the armory's own repo already covers BOTH CVEs in one file. We crafted the v2; the v1 = the armory's class-firing shape — bank the v1 as the next fire.
+
